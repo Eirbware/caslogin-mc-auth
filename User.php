@@ -1,5 +1,7 @@
 <?php
 
+require_once 'Role.php';
+
 class User implements JsonSerializable
 {
     public string $login;
