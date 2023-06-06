@@ -4,7 +4,7 @@
 /**
  * Get header Authorization
  * */
-function getAuthorizationHeader(): ?string
+function get_authorization_headers(): ?string
 {
     $headers = null;
     if (isset($_SERVER['Authorization'])) {
@@ -27,9 +27,9 @@ function getAuthorizationHeader(): ?string
 /**
  * get access token from header
  * */
-function getBearerToken(): ?string
+function get_bearer_token(): ?string
 {
-    $headers = getAuthorizationHeader();
+    $headers = get_authorization_headers();
     // HEADER: Get the access token from the header
     if (!empty($headers)) {
         if (preg_match('/Bearer\s(\S+)/', $headers, $matches)) {

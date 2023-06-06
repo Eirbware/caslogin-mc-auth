@@ -3,11 +3,19 @@ require_once 'CasLoginPDO.php';
 require_once 'Requests.php';
 require_once 'User.php';
 require_once 'Role.php';
+require_once 'utils.php';
+require_once 'env.php';
+
+if(get_bearer_token() != get_env('api_key')){
+    http_response_code(401);
+    die();
+}
 
 $pdo = new CasLoginPDO();
 $smt = $pdo->prepare(Requests::SELECT_USERS_WITH_ROLES->value);
 $smt->execute();
 $users = [];
+
 echo '<pre>';
 foreach($smt as $row){
     print_r($row);
