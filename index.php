@@ -3,7 +3,7 @@
 //require_once 'Requests.php';
 //require_once 'User.php';
 //require_once 'Role.php';
-//require_once 'auth_bearer.php';
+//require_once 'auth_endpoint.php';
 //
 //$pdo = new CasLoginPDO();
 //$smt = $pdo->prepare(Requests::SELECT_USERS_WITH_ROLES->value);
