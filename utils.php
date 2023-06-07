@@ -1,6 +1,8 @@
 <?php
 
 //https://stackoverflow.com/a/40582472
+use JetBrains\PhpStorm\NoReturn;
+
 /**
  * Get header Authorization
  * */
@@ -39,10 +41,15 @@ function get_bearer_token(): ?string
     return null;
 }
 
-function array_has_keys(array $array, ...$keys): bool{
+function array_has_all_keys(array $array, ...$keys): bool{
     foreach ($keys as $key) {
         if(!array_key_exists($key, $array))
             return false;
     }
     return true;
+}
+
+#[NoReturn] function die_with_http_code(int $response_code, string $reason = ""): void{
+    http_response_code($response_code);
+    die($reason);
 }
