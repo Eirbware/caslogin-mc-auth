@@ -2,7 +2,7 @@
 
 require_once 'Role.php';
 
-class User implements JsonSerializable
+class LoggedUser implements JsonSerializable
 {
     public string $login;
     public string $uuid;
