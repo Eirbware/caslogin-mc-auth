@@ -37,6 +37,8 @@ function create_auth_file(): string
 {
     $casTok = $_GET["ticket"];
     $validationCode = sprintf("%06d", mt_rand(1, 999999));
+    if(!is_dir("authCodes/"))
+        mkdir("authCodes/");
     $fp = fopen("authCodes/" . $_GET["uuid"], "w");
     fwrite($fp, "$validationCode\n$casTok");
     fclose($fp);
