@@ -1,7 +1,7 @@
 <?php
 //require_once 'CasLoginPDO.php';
 //require_once 'Requests.php';
-//require_once 'User.php';
+//require_once 'LoggedUser.php';
 //require_once 'Role.php';
 //require_once 'auth_endpoint.php';
 //
@@ -13,7 +13,7 @@
 //echo '<pre>';
 //foreach($smt as $row){
 //    print_r($row);
-//    $usr = new User();
+//    $usr = new LoggedUser();
 //    $usr->login = $row['login'];
 //    $usr->uuid = $row['uuid'];
 //    if(!array_key_exists($usr->login, $users)){

@@ -1,6 +1,6 @@
 <?php
-require_once '../auth_bearer.php';
-require_once '../User.php';
+require_once '../auth_endpoint.php';
+require_once '../LoggedUser.php';
 require_once '../CasLoginPDO.php';
 require_once '../Requests.php';
 
@@ -8,12 +8,12 @@ header('content-type:application/json');
 function get_users(): void
 {
     $pdo = new CasLoginPDO();
-    $smt = $pdo->prepare(Requests::SELECT_USERS_WITH_ROLES->value);
+    $smt = $pdo->prepare(Requests::SELECT_USERS_WITH_ROLES);
     $smt->execute();
 
     $users = [];
     foreach($smt as $row){
-        $usr = new User();
+        $usr = new LoggedUser();
         $usr->login = $row['login'];
         $usr->uuid = $row['uuid'];
         if(!array_key_exists($usr->login, $users)){

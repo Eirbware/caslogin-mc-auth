@@ -2,8 +2,13 @@
 
 enum Requests: string
 {
-    case SELECT_USERS = 'SELECT * FROM CASUSERS';
-    case SELECT_LOGGED = 'SELECT * FROM LOGGED';
-    case SELECT_ROLES = 'SELECT * FROM ROLES';
-    case SELECT_USERS_WITH_ROLES = "SELECT u.*, r.id as 'role' from CASUSERS u left outer join USER_ROLES ur on (u.login = ur.login) left outer join ROLES r on (ur.role = r.id);";
+    const SELECT_USERS = 'SELECT * FROM CASUSERS';
+    const SELECT_LOGGED = 'SELECT * FROM LOGGED';
+    const SELECT_ROLES = 'SELECT * FROM ROLES';
+    const SELECT_USERS_WITH_ROLES = "SELECT u.*, r.id as 'role' from CASUSERS u left outer join USER_ROLES ur on (u.login = ur.login) left outer join ROLES r on (ur.role = r.id)";
+    const SEARCH_CAS_USER_BY_LOGIN = "SELECT * from CASUSERS WHERE login LIKE :loginSearch";
+    const CREATE_CAS_USER = "INSERT INTO CASUSERS VALUES (:login)";
+    const SEARCH_LOGGED_USER_WITH_ROLES_BY_LOGIN = "SELECT u.*, r.id as 'role' from LOGGED u left outer join USER_ROLES ur on (u.user = ur.login) left outer join ROLES r on (ur.role = r.id) WHERE u.user LIKE :loginSearch";
+    const GET_LOGGED_BY_UUID = "SELECT * FROM LOGGED WHERE uuid = :uuid";
+    const LOG_USER = "INSERT INTO LOGGED VALUES (:user, :uuid)";
 }

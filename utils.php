@@ -54,6 +54,11 @@ function array_has_all_keys(array $array, ...$keys): bool{
     die($reason);
 }
 
+function get_protocol(): string
+{
+    return ($_SERVER["HTTPS"] ? "https://" : "http://");
+}
+
 function get_current_request_url(): string{
-    return ($_SERVER["HTTPS"] ? "https://" : "http://") . $_SERVER["HTTP_HOST"] . $_SERVER["REQUEST_URI"];
+    return get_protocol() . $_SERVER["HTTP_HOST"] . $_SERVER["REQUEST_URI"];
 }
