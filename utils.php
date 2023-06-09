@@ -54,6 +54,12 @@ function array_has_all_keys(array $array, ...$keys): bool{
     die($reason);
 }
 
+#[NoReturn] function die_with_http_code_json(int $response_code, mixed $jsonObj): void{
+    http_response_code($response_code);
+    header("content-type: application/json");
+    die(json_encode($jsonObj));
+}
+
 function get_protocol(): string
 {
     return ($_SERVER["HTTPS"] ? "https://" : "http://");

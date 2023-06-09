@@ -21,10 +21,10 @@ function validate_auth($uuid, $authCode): void
     if (!is_dir("authCodes"))
         mkdir('authCodes', 0700);
     $filepath = "authCodes/$uuid";
-    $handle = fopen($filepath, 'r') or die_with_http_code(400, '<h1>cannot get uuid authcode</h1>');
+    $handle = fopen($filepath, 'r') or die_with_http_code_json(400, ["success" => false, "error" => "INVALID_UUID"]);
     if (time() - filectime($filepath) >= get_env("auth_code_expiry")) {
         unlink($filepath);
-        die_with_http_code(400, "<h1>auth expired</h1>");
+        die_with_http_code_json(400, ["success" => false, "error" => "AUTH_CODE_EXPIRED"]);
     }
 
     if (feof($handle))
@@ -35,7 +35,7 @@ function validate_auth($uuid, $authCode): void
     $casToken = trim(fgets($handle));
     fclose($handle);
     if ($authCode != $actualAuthCode)
-        die_with_http_code(400, '<h1>Bad authcode</h1>');
+        die_with_http_code_json(400, ["success" => false, "error" => "INVALID_AUTH_CODE"]);
     $user = validate_cas_token($casToken, $uuid);
     header("content-type: application/json");
     echo(json_encode($user));
@@ -59,7 +59,7 @@ function validate_cas_token(string $casToken, string $uuid): LoggedUser
     curl_close($ch);
     $res = json_decode($resStr, true)["serviceResponse"];
     if (array_key_exists("authenticationFailure", $res)){
-        die_with_http_code(400, "Bad token");
+        die_with_http_code_json(400, ["success" => false, "error" => "INVALID_TOKEN"]);
     }
 
     return log_user($res["authenticationSuccess"], $uuid);
