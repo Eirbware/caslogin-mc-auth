@@ -22,7 +22,7 @@ function validate_auth($uuid, $authCode): void
     if (!is_dir("authCodes"))
         mkdir('authCodes', 0700);
     $filepath = "authCodes/$uuid";
-    $handle = fopen($filepath, 'r') or die_with_http_code_json(400, ["success" => false, "error" => "INVALID_UUID"]);
+    $handle = fopen($filepath, 'r') or die_with_http_code_json(400, ["success" => false, "error" => "NO_AUTH_CODE_FOR_UUID"]);
     if (time() - filectime($filepath) >= get_env("auth_code_expiry")) {
         unlink($filepath);
         die_with_http_code_json(400, ["success" => false, "error" => "AUTH_CODE_EXPIRED"]);
@@ -35,6 +35,7 @@ function validate_auth($uuid, $authCode): void
         die_with_http_code(500, "<h1>Internal Server Error</h1>");
     $casToken = trim(fgets($handle));
     fclose($handle);
+	unlink($filepath);
     if ($authCode != $actualAuthCode)
         die_with_http_code_json(400, ["success" => false, "error" => "INVALID_AUTH_CODE"]);
     $user = validate_cas_token($casToken, $uuid);
