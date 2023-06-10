@@ -2,9 +2,9 @@
 
 class Ban implements JsonSerializable
 {
-    public string $bannedUser;
-    public string $banner;
-    public ?string $reason;
+	public string $bannedUser;
+	public string $banner;
+	public ?string $reason;
 	public DateTime $timestamp;
 	public ?DateTime $expires;
 

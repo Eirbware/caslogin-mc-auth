@@ -8,25 +8,26 @@ function check_banned_exists(CasLoginPDO $pdo): void
 	$smt = $pdo->prepare(Requests::SEARCH_CAS_USER_BY_LOGIN);
 	$smt->bindValue(":loginSearch", $_POST['banned']);
 	$smt->execute();
-	if($smt->rowCount() === 0)
+	if ($smt->rowCount() === 0)
 		die_with_http_code_json(400, ["success" => false, "error" => "BANNED_NOT_AN_USER"]);
 	$smt->closeCursor();
 }
+
 function check_banner_exists(CasLoginPDO $pdo): void
 {
 	$smt = $pdo->prepare(Requests::SEARCH_CAS_USER_BY_LOGIN);
 	$smt->bindValue(":loginSearch", $_POST['banner']);
 	$smt->execute();
-	if($smt->rowCount() === 0)
+	if ($smt->rowCount() === 0)
 		die_with_http_code_json(400, ["success" => false, "error" => "BANNER_NOT_AN_USER"]);
 	$smt->closeCursor();
 }
 
 function check_expires_correct_timestamp(): void
 {
-	if(!array_key_exists("expires", $_POST))
+	if (!array_key_exists("expires", $_POST))
 		return;
-	if((string)(int)$_POST['expires'] != $_POST['expires'])
+	if ((string)(int)$_POST['expires'] != $_POST['expires'])
 		die_with_http_code_json(400, ["success" => false, "error" => "EXPIRES_NOT_A_TIMESTAMP"]);
 }
 
@@ -40,7 +41,7 @@ function ban_user(CasLoginPDO $pdo): void
 	$smt->execute();
 }
 
-if($_SERVER['REQUEST_METHOD'] != "POST")
+if ($_SERVER['REQUEST_METHOD'] != "POST")
 	die_with_http_code(405, "<h1>Bad Method</h1>");
 
 header("Accept: application/json");
@@ -48,7 +49,7 @@ header("Accept: application/json");
 $json = file_get_contents('php://input');
 $_POST = json_decode($json, true);
 
-if(!array_has_all_keys($_POST, "banner", "banned"))
+if (!array_has_all_keys($_POST, "banner", "banned"))
 	die_with_http_code(400, "<h1>Bad Request</h1>");
 
 $pdo = new CasLoginPDO();

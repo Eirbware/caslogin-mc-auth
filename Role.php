@@ -2,7 +2,7 @@
 
 enum Role: string
 {
-    case ADMIN = 'admin';
-    case MODERATOR = 'moderator';
+	case ADMIN = 'admin';
+	case MODERATOR = 'moderator';
 
 }
