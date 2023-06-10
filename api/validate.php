@@ -5,6 +5,7 @@ require_once '../utils.php';
 require_once '../CasLoginPDO.php';
 require_once '../Requests.php';
 require_once '../LoggedUser.php';
+require_once '../Ban.php';
 
 if ($_SERVER["REQUEST_METHOD"] != "GET") {
     http_response_code(405);
@@ -37,8 +38,7 @@ function validate_auth($uuid, $authCode): void
     if ($authCode != $actualAuthCode)
         die_with_http_code_json(400, ["success" => false, "error" => "INVALID_AUTH_CODE"]);
     $user = validate_cas_token($casToken, $uuid);
-    header("content-type: application/json");
-    echo(json_encode($user));
+    die_with_http_code_json(200, ["success" => true, "user" => $user]);
 }
 
 function validate_cas_token(string $casToken, string $uuid): LoggedUser
@@ -69,6 +69,14 @@ function log_user(mixed $authenticationSuccess, string $uuid): LoggedUser
 {
     $casUser = get_or_create_cas_user($authenticationSuccess["user"]);
     $pdo = new CasLoginPDO();
+    check_if_player_banned($pdo, $casUser);
+    return login_player($pdo, $uuid, $casUser);
+
+
+}
+
+function login_player(CasLoginPDO $pdo, string $uuid, string $casUser)
+{
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_SILENT);
     $smt = $pdo->prepare(Requests::LOG_USER);
     $smt->bindValue(":user", $casUser);
@@ -90,6 +98,25 @@ function log_user(mixed $authenticationSuccess, string $uuid): LoggedUser
     }
     return $users[$casUser];
 }
+
+function check_if_player_banned(CasLoginPDO $pdo, $casUser): void
+{
+    $smt = $pdo->prepare(Requests::SEARCH_NOT_EXPIRED_BAN_BY_USER);
+    $smt->bindValue(":userSearch", $casUser);
+    $smt->execute();
+    if($smt->rowCount() > 0){
+        $row = $smt->fetch();
+		$ban = new Ban();
+		$ban->bannedUser = $row['banned'];
+		$ban->banner = $row['banner'];
+        $ban->reason = $row['reason'];
+        $ban->timestamp = new DateTime($row['timestamp']);
+		$ban->expires = $row['expires'] === null ? null : new DateTime($row['expires']);
+
+		die_with_http_code_json(400, ["success" => false, "error" => "USER_BANNED", "ban" => $ban]);
+    }
+}
+
 
 function get_or_create_cas_user(string $user): string
 {
