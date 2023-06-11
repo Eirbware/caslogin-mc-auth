@@ -44,7 +44,7 @@ function ban_user(CasLoginPDO $pdo): void
 	$smt->execute();
 }
 
-#[NoReturn] function handle_ban_user(){
+#[NoReturn] function handle_ban_user(): void{
 	$json = file_get_contents('php://input');
 	$_POST = json_decode($json, true);
 
