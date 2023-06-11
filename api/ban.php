@@ -5,6 +5,7 @@ require_once '../auth_endpoint.php';
 require_once '../utils.php';
 require_once '../CasLoginPDO.php';
 require_once '../Requests.php';
+require_once '../Errors.php';
 
 function check_banned_exists(CasLoginPDO $pdo): void
 {
@@ -12,7 +13,7 @@ function check_banned_exists(CasLoginPDO $pdo): void
 	$smt->bindValue(":loginSearch", $_POST['banned']);
 	$smt->execute();
 	if ($smt->rowCount() === 0)
-		die_with_http_code_json(400, ["success" => false, "error" => "BANNED_NOT_AN_USER"]);
+		die_with_http_code_json(400, ["success" => false, "error" => Errors::BANNED_NOT_AN_USER]);
 	$smt->closeCursor();
 }
 
@@ -22,7 +23,7 @@ function check_banner_exists(CasLoginPDO $pdo): void
 	$smt->bindValue(":loginSearch", $_POST['banner']);
 	$smt->execute();
 	if ($smt->rowCount() === 0)
-		die_with_http_code_json(400, ["success" => false, "error" => "BANNER_NOT_AN_USER"]);
+		die_with_http_code_json(400, ["success" => false, "error" => Errors::BANNED_NOT_AN_USER]);
 	$smt->closeCursor();
 }
 
@@ -31,7 +32,7 @@ function check_expires_correct_timestamp(): void
 	if (!array_key_exists("expires", $_POST))
 		return;
 	if ((string)(int)$_POST['expires'] != $_POST['expires'])
-		die_with_http_code_json(400, ["success" => false, "error" => "EXPIRES_NOT_A_TIMESTAMP"]);
+		die_with_http_code_json(400, ["success" => false, "error" => Errors::EXPIRES_NOT_A_TIMESTAMP]);
 }
 
 function ban_user(CasLoginPDO $pdo): void

@@ -5,6 +5,7 @@ require_once '../utils.php';
 require_once '../CasLoginPDO.php';
 require_once '../Requests.php';
 require_once '../LoggedUser.php';
+require_once '../Errors.php';
 require_once '../Ban.php';
 
 if ($_SERVER["REQUEST_METHOD"] != "GET") {
@@ -13,8 +14,7 @@ if ($_SERVER["REQUEST_METHOD"] != "GET") {
 }
 
 if (!array_has_all_keys($_GET, "code", "uuid")) {
-	http_response_code(400);
-	die('<h1>Not enough parameters</h1>');
+	die_with_http_code_json(400, ["success" => false, "error" => Errors::NOT_ENOUGH_KEYS]);
 }
 
 function validate_auth($uuid, $authCode): void
@@ -22,10 +22,10 @@ function validate_auth($uuid, $authCode): void
 	if (!is_dir("authCodes"))
 		mkdir('authCodes', 0700);
 	$filepath = "authCodes/$uuid";
-	$handle = fopen($filepath, 'r') or die_with_http_code_json(400, ["success" => false, "error" => "NO_AUTH_CODE_FOR_UUID"]);
+	$handle = fopen($filepath, 'r') or die_with_http_code_json(400, ["success" => false, "error" => Errors::NO_AUTH_CODE_FOR_UUID]);
 	if (time() - filectime($filepath) >= get_env("auth_code_expiry")) {
 		unlink($filepath);
-		die_with_http_code_json(400, ["success" => false, "error" => "AUTH_CODE_EXPIRED"]);
+		die_with_http_code_json(400, ["success" => false, "error" => Errors::AUTH_CODE_EXPIRED]);
 	}
 
 	if (feof($handle))
@@ -37,7 +37,7 @@ function validate_auth($uuid, $authCode): void
 	fclose($handle);
 	unlink($filepath);
 	if ($authCode != $actualAuthCode)
-		die_with_http_code_json(400, ["success" => false, "error" => "INVALID_AUTH_CODE"]);
+		die_with_http_code_json(400, ["success" => false, "error" => Errors::INVALID_AUTH_CODE]);
 	$user = validate_cas_token($casToken, $uuid);
 	die_with_http_code_json(200, ["success" => true, "user" => $user]);
 }
@@ -60,7 +60,7 @@ function validate_cas_token(string $casToken, string $uuid): LoggedUser
 	curl_close($ch);
 	$res = json_decode($resStr, true)["serviceResponse"];
 	if (array_key_exists("authenticationFailure", $res)) {
-		die_with_http_code_json(400, ["success" => false, "error" => "INVALID_TOKEN"]);
+		die_with_http_code_json(400, ["success" => false, "error" => Errors::INVALID_TOKEN]);
 	}
 
 	return log_user($res["authenticationSuccess"], $uuid);
@@ -114,7 +114,7 @@ function check_if_player_banned(CasLoginPDO $pdo, $casUser): void
 		$ban->timestamp = new DateTime($row['timestamp']);
 		$ban->expires = $row['expires'] === null ? null : new DateTime($row['expires']);
 
-		die_with_http_code_json(400, ["success" => false, "error" => "USER_BANNED", "ban" => $ban]);
+		die_with_http_code_json(400, ["success" => false, "error" => Errors::USER_BANNED, "ban" => $ban]);
 	}
 }
 
