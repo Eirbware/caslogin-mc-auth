@@ -1,7 +1,7 @@
 <?php
 
 use JetBrains\PhpStorm\NoReturn;
-
+require_once '../auth_endpoint.php';
 require_once '../utils.php';
 require_once '../CasLoginPDO.php';
 require_once '../Requests.php';
