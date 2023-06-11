@@ -1,4 +1,5 @@
 <?php
+require_once '../auth_endpoint.php';
 require_once '../utils.php';
 require_once '../CasLoginPDO.php';
 require_once '../LoggedUser.php';
