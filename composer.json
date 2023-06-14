@@ -1,6 +1,12 @@
 {
-    "require": {
-        "doctrine/orm": "^2.15",
-        "doctrine/dbal": "^3.6"
+  "require": {
+    "doctrine/orm": "^2.15",
+    "doctrine/dbal": "^3.6",
+    "symfony/cache": "^6.3"
+  },
+  "autoload": {
+    "psr-0": {
+      "": "src/"
     }
+  }
 }
