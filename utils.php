@@ -71,3 +71,9 @@ function get_current_request_url(): string
 {
 	return get_protocol() . $_SERVER["HTTP_HOST"] . $_SERVER["REQUEST_URI"];
 }
+
+function datetime_from_timestamp(int $timestamp): DateTime{
+	$dt = new DateTime('now');
+	$dt->setTimestamp($timestamp);
+	return $dt;
+}

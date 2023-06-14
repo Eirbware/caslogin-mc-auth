@@ -1,30 +1,30 @@
 <?php
 
+use Doctrine\ORM\EntityManager;
+use Doctrine\ORM\EntityRepository;
 use JetBrains\PhpStorm\NoReturn;
+
 require_once '../auth_endpoint.php';
 require_once '../utils.php';
-require_once '../CasLoginPDO.php';
 require_once '../Requests.php';
 require_once '../Errors.php';
+require_once '../src/Ban.php';
 
-function check_banned_exists(CasLoginPDO $pdo): void
+
+function get_banned(EntityRepository $userRepo): CasUser
 {
-	$smt = $pdo->prepare(Requests::SEARCH_CAS_USER_BY_LOGIN);
-	$smt->bindValue(":loginSearch", $_POST['banned']);
-	$smt->execute();
-	if ($smt->rowCount() === 0)
+	$user = $userRepo->findOneBy(["login" => $_POST['banned']]);
+	if ($user === null)
 		die_with_http_code_json(400, ["success" => false, "error" => Errors::BANNED_NOT_AN_USER]);
-	$smt->closeCursor();
+	return $user;
 }
 
-function check_banner_exists(CasLoginPDO $pdo): void
+function get_banner(EntityRepository $userRepo): CasUser
 {
-	$smt = $pdo->prepare(Requests::SEARCH_CAS_USER_BY_LOGIN);
-	$smt->bindValue(":loginSearch", $_POST['banner']);
-	$smt->execute();
-	if ($smt->rowCount() === 0)
-		die_with_http_code_json(400, ["success" => false, "error" => Errors::BANNED_NOT_AN_USER]);
-	$smt->closeCursor();
+	$user = $userRepo->findOneBy(["login" => $_POST['banner']]);
+	if ($user === null)
+		die_with_http_code_json(400, ["success" => false, "error" => Errors::BANNER_NOT_AN_USER]);
+	return $user;
 }
 
 function check_expires_correct_timestamp(): void
@@ -35,57 +35,46 @@ function check_expires_correct_timestamp(): void
 		die_with_http_code_json(400, ["success" => false, "error" => Errors::EXPIRES_NOT_A_TIMESTAMP]);
 }
 
-function ban_user(CasLoginPDO $pdo): void
+function ban_user(EntityManager $entityManager, CasUser $banned, CasUser $banner): void
 {
-	$smt = $pdo->prepare(Requests::BAN_USER);
-	$smt->bindValue(":banned", $_POST["banned"]);
-	$smt->bindValue(":banner", $_POST["banner"]);
-	$smt->bindValue(":reason", array_key_exists("reason", $_POST) ? $_POST['reason'] : null);
-	$smt->bindValue(":expires", array_key_exists("expires", $_POST) ? date("Y-m-d H:i:s", $_POST['expires']) : null);
-	$smt->execute();
+	$ban = new Ban($banned,
+		$banner,
+		array_key_exists("reason", $_POST) ? $_POST['reason'] : null,
+		array_key_exists("expires", $_POST) ? datetime_from_timestamp((int)$_POST["expires"]) : null);
+	$entityManager->persist($ban);
+	$entityManager->flush();
 }
 
-#[NoReturn] function handle_ban_user(): void{
+#[NoReturn] function handle_ban_user(EntityManager $entityManager): void
+{
 	$json = file_get_contents('php://input');
 	$_POST = json_decode($json, true);
 
 	if (!array_has_all_keys($_POST, "banner", "banned"))
 		die_with_http_code(400, "<h1>Bad Request</h1>");
 
-	$pdo = new CasLoginPDO();
-	check_banned_exists($pdo);
-	check_banner_exists($pdo);
 	check_expires_correct_timestamp();
+	$banned = get_banned($entityManager->getRepository(CasUser::class));
+	$banner = get_banner($entityManager->getRepository(CasUser::class));
 
-	ban_user($pdo);
+	ban_user($entityManager, $banned, $banner);
 	die_with_http_code_json(200, ["success" => true]);
 }
 
-function handle_get_bans(){
-	$pdo = new CasLoginPDO();
-	$smt = $pdo->prepare(Requests::GET_NOT_EXPIRED_BANS);
-	$bans = [];
-	$smt->execute();
-	foreach ($smt as $row) {
-		$ban = new Ban();
-		$ban->bannedUser = $row['banned'];
-		$ban->banner = $row['banner'];
-		$ban->reason = $row['reason'];
-		$ban->timestamp = new DateTime($row['timestamp']);
-		$ban->expires = $row['expires'] === null ? null : new DateTime($row['expires']);
-		$bans[] = $ban;
-	}
-	die_with_http_code_json(200, ["success" => true, "bans" => $bans]);
+function handle_get_bans(EntityRepository $banRepo)
+{
+	die_with_http_code_json(200, ["success" => true, "bans" => $banRepo->findAll()]);
 }
 
 header("Accept: application/json");
 
 if ($_SERVER['REQUEST_METHOD'] != "POST" && $_SERVER['REQUEST_METHOD'] != "GET")
 	die_with_http_code(405, "<h1>Bad Method</h1>");
-
+require_once '../bootstrap.php';
+global $entityManager;
 if ($_SERVER['REQUEST_METHOD'] == "POST") {
-	handle_ban_user();
-}else{
-	handle_get_bans();
+	handle_ban_user($entityManager);
+} else {
+	handle_get_bans($entityManager->getRepository(Ban::class));
 }
 
