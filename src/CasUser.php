@@ -44,12 +44,12 @@ class CasUser implements JsonSerializable
 		return [
 			"login" => $this->login,
 			"ecole" => $this->ecole,
-			"roles" => $this->getRoles()
+			"roles" => $this->getRoles()->toArray()
 		];
 	}
 
-	public function getRoles(): array
+	public function getRoles(): Collection
 	{
-		return $this->roles->toArray();
+		return $this->roles;
 	}
 }

@@ -1,65 +1,40 @@
 <?php
+
+use Doctrine\ORM\EntityManager;
+use Doctrine\ORM\EntityRepository;
+
 require_once '../auth_endpoint.php';
 require_once '../utils.php';
-require_once '../Role.php';
 require_once '../Requests.php';
 require_once '../Errors.php';
-require_once '../CasLoginPDO.php';
 
-function handle_add_roles(CasLoginPDO $pdo): void
+function handle_add_roles(EntityManager $entityManager, CasUser $user, Role $role): void
 {
-	check_user_has_not_role($pdo);
-	$smt = $pdo->prepare(Requests::ADD_ROLE_TO_USER);
-	$smt->bindValue(":user", $_POST["user"]);
-	$smt->bindValue(":role", $_POST["role"]);
-	$smt->execute();
+	if($user->getRoles()->contains($role))
+		die_with_http_code_json(400, ["success" => false, "error" => Errors::USER_HAS_ROLE]);
+	$user->getRoles()->add($role);
+	$entityManager->flush();
 }
 
-function handle_del_roles(CasLoginPDO $pdo): void
+function handle_del_roles(EntityManager $entityManager, CasUser $user, Role $role): void
 {
-	check_user_has_role($pdo);
-	$smt = $pdo->prepare(Requests::REMOVE_ROLE_FROM_USER);
-	$smt->bindValue(":user", $_POST["user"]);
-	$smt->bindValue(":role", $_POST["role"]);
-	$smt->execute();
-}
-
-function check_user_has_role(CasLoginPDO $pdo)
-{
-	$smt = $pdo->prepare(Requests::SEARCH_USER_BY_ROLE_AND_LOGIN);
-	$smt->bindValue(":loginSearch", $_POST["user"]);
-	$smt->bindValue(":roleSearch", $_POST["role"]);
-	$smt->execute();
-	if($smt->rowCount() === 0)
+	if(!$user->getRoles()->contains($role))
 		die_with_http_code_json(400, ["succes" => false, "error" => Errors::USER_DOES_NOT_HAVE_ROLE]);
+	$user->getRoles()->removeElement($role);
+	$entityManager->flush();
 }
 
-function check_user_has_not_role(CasLoginPDO $pdo)
+function get_role_or_die(EntityRepository $roleRepo): Role
 {
-	$smt = $pdo->prepare(Requests::SEARCH_USER_BY_ROLE_AND_LOGIN);
-	$smt->bindValue(":loginSearch", $_POST["user"]);
-	$smt->bindValue(":roleSearch", $_POST["role"]);
-	$smt->execute();
-	if($smt->rowCount() > 0)
-		die_with_http_code_json(400, ["succes" => false, "error" => Errors::USER_HAS_ROLE]);
+
+	$role = $roleRepo->findOneBy(["id" => $_POST["role"]]) or die_with_http_code_json(400, ["success" => false, "error" => Errors::ROLE_NOT_IN_DATABASE]);
+	return $role;
 }
 
-function check_role_exist(CasLoginPDO $pdo): void
+function get_user_or_die(EntityRepository $userRepo): CasUser
 {
-	$smt = $pdo->prepare(Requests::SEARCH_ROLE_BY_ID);
-	$smt->bindValue(":idSearch", $_POST["role"]);
-	$smt->execute();
-	if($smt->rowCount() === 0)
-		die_with_http_code_json(400, ["success" => false, "error" => Errors::ROLE_NOT_IN_DATABASE]);
-}
-
-function check_user_exists(CasLoginPDO $pdo): void
-{
-	$smt = $pdo->prepare(Requests::SEARCH_CAS_USER_BY_LOGIN);
-	$smt->bindValue(":loginSearch", $_POST["user"]);
-	$smt->execute();
-	if($smt->rowCount() === 0)
-		die_with_http_code_json(400, ["success" => false, "error" => Errors::USER_NOT_IN_DATABASE]);
+	$user = $userRepo->findOneBy(["login" => $_POST["user"]]) or die_with_http_code_json(400, ["success" => false, "error" => Errors::USER_NOT_IN_DATABASE]);
+	return $user;
 }
 
 if($_SERVER['REQUEST_METHOD'] != "POST" && $_SERVER['REQUEST_METHOD'] != "DELETE")
@@ -71,12 +46,13 @@ $_POST = json_decode($json, true);
 if(!array_has_all_keys($_POST, "user", "role"))
 	die_with_http_code_json(400, ["success" => false, "error" => Errors::NOT_ENOUGH_KEYS]);
 
-$pdo = new CasLoginPDO();
-check_user_exists($pdo);
-check_role_exist($pdo);
+require_once '../bootstrap.php';
+global $entityManager;
+$user = get_user_or_die($entityManager->getRepository(CasUser::class));
+$role = get_role_or_die($entityManager->getRepository(Role::class));
 
 if($_SERVER['REQUEST_METHOD'] == "POST")
-	handle_add_roles($pdo);
+	handle_add_roles($entityManager, $user, $role);
 else
-	handle_del_roles($pdo);
+	handle_del_roles($entityManager, $user, $role);
 die_with_http_code_json(200, ["success" => true]);
