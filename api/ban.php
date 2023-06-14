@@ -11,19 +11,15 @@ require_once '../Errors.php';
 require_once '../src/Ban.php';
 
 
-function get_banned(EntityRepository $userRepo): CasUser
+function get_banned_or_die(EntityRepository $userRepo): CasUser
 {
-	$user = $userRepo->findOneBy(["login" => $_POST['banned']]);
-	if ($user === null)
-		die_with_http_code_json(400, ["success" => false, "error" => Errors::BANNED_NOT_AN_USER]);
+	$user = $userRepo->findOneBy(["login" => $_POST['banned']]) or die_with_http_code_json(400, ["success" => false, "error" => Errors::BANNED_NOT_AN_USER]);
 	return $user;
 }
 
-function get_banner(EntityRepository $userRepo): CasUser
+function get_banner_or_die(EntityRepository $userRepo): CasUser
 {
-	$user = $userRepo->findOneBy(["login" => $_POST['banner']]);
-	if ($user === null)
-		die_with_http_code_json(400, ["success" => false, "error" => Errors::BANNER_NOT_AN_USER]);
+	$user = $userRepo->findOneBy(["login" => $_POST['banner']]) or die_with_http_code_json(400, ["success" => false, "error" => Errors::BANNER_NOT_AN_USER]);;
 	return $user;
 }
 
@@ -54,8 +50,8 @@ function ban_user(EntityManager $entityManager, CasUser $banned, CasUser $banner
 		die_with_http_code(400, "<h1>Bad Request</h1>");
 
 	check_expires_correct_timestamp();
-	$banned = get_banned($entityManager->getRepository(CasUser::class));
-	$banner = get_banner($entityManager->getRepository(CasUser::class));
+	$banned = get_banned_or_die($entityManager->getRepository(CasUser::class));
+	$banner = get_banner_or_die($entityManager->getRepository(CasUser::class));
 
 	ban_user($entityManager, $banned, $banner);
 	die_with_http_code_json(200, ["success" => true]);
