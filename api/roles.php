@@ -5,7 +5,6 @@ use Doctrine\ORM\EntityRepository;
 
 require_once '../auth_endpoint.php';
 require_once '../utils.php';
-require_once '../Requests.php';
 require_once '../Errors.php';
 
 function handle_add_roles(EntityManager $entityManager, CasUser $user, Role $role): void

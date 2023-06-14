@@ -6,7 +6,6 @@ use JetBrains\PhpStorm\NoReturn;
 require_once '../auth_endpoint.php';
 require_once '../env.php';
 require_once '../utils.php';
-require_once '../Requests.php';
 require_once '../Errors.php';
 
 #[NoReturn] function validate_auth(EntityManager $entityManager, string $uuid, string $authCode): void
