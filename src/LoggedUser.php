@@ -4,11 +4,11 @@ use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity]
 #[ORM\Table(name: 'LOGGED')]
-class LoggedUser implements JsonSerializable
+class LoggedUser implements \JsonSerializable
 {
 	#[ORM\Id]
+    #[ORM\GeneratedValue]
 	#[ORM\Column(type: 'integer')]
-	#[ORM\GeneratedValue]
 	private int $id;
 	#[ORM\OneToOne(targetEntity: CasUser::class)]
 	#[Orm\JoinColumn(name: 'login', referencedColumnName: 'login')]
@@ -16,7 +16,13 @@ class LoggedUser implements JsonSerializable
 	#[Orm\Column(type: 'string')]
 	private string $uuid;
 
-	public function jsonSerialize(): array
+    public function __construct(CasUser $user, string $uuid)
+    {
+        $this->user = $user;
+        $this->uuid = $uuid;
+    }
+
+    public function jsonSerialize(): array
 	{
 		return [
 			"user" => $this->user,

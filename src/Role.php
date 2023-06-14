@@ -1,11 +1,10 @@
 <?php
-
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity]
 #[ORM\Table(name: 'ROLES')]
-class Role implements JsonSerializable
+class Role implements \JsonSerializable
 {
 	#[ORM\Id]
 	#[ORM\Column(type: "string")]

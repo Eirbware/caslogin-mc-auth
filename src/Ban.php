@@ -4,7 +4,7 @@ use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity]
 #[ORM\Table(name: 'BANS')]
-class Ban implements JsonSerializable
+class Ban implements \JsonSerializable
 {
 	#[Orm\Id]
 	#[Orm\GeneratedValue]
@@ -19,16 +19,16 @@ class Ban implements JsonSerializable
 	#[ORM\Column(type: "string", nullable: true)]
 	private ?string $reason;
 	#[ORM\Column(type: "datetime")]
-	private DateTime $timestamp;
+	private \DateTime $timestamp;
 	#[ORM\Column(type: "datetime", nullable: true)]
-	private ?DateTime $expires;
+	private ?\DateTime $expires;
 
 	public function __construct(CasUser $banned, CasUser $banner, ?string $reason, ?DateTime $expires)
 	{
 		$this->banned = $banned;
 		$this->banner = $banner;
 		$this->reason = $reason;
-		$this->timestamp = new DateTime('now');
+		$this->timestamp = new \DateTime('now');
 		$this->expires = $expires;
 	}
 

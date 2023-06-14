@@ -6,7 +6,7 @@ use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity]
 #[ORM\Table(name: 'CASUSERS')]
-class CasUser implements JsonSerializable
+class CasUser implements \JsonSerializable
 {
 	#[ORM\Id]
 	#[ORM\Column(type: "string")]
@@ -25,7 +25,7 @@ class CasUser implements JsonSerializable
 	public function __construct($json){
 		$res = $json["serviceResponse"]["authenticationSuccess"];
 		$this->login = $res["user"];
-		$this->ecole = $res["attributes"]["ecole"];
+		$this->ecole = $res["attributes"]["ecole"][0];
 		$this->roles = new ArrayCollection();
 	}
 

@@ -1,23 +1,15 @@
 <?php
+
+use Doctrine\ORM\EntityManager;
+use JetBrains\PhpStorm\NoReturn;
+
 require_once '../auth_endpoint.php';
 require_once '../env.php';
 require_once '../utils.php';
-require_once '../CasLoginPDO.php';
 require_once '../Requests.php';
-require_once '../LoggedUser.php';
 require_once '../Errors.php';
-require_once '../Ban.php';
 
-if ($_SERVER["REQUEST_METHOD"] != "GET") {
-	http_response_code(405);
-	die('<h1>Method Not Allowed</h1>');
-}
-
-if (!array_has_all_keys($_GET, "code", "uuid")) {
-	die_with_http_code_json(400, ["success" => false, "error" => Errors::NOT_ENOUGH_KEYS]);
-}
-
-function validate_auth($uuid, $authCode): void
+#[NoReturn] function validate_auth(EntityManager $entityManager, string $uuid, string $authCode): void
 {
 	if (!is_dir("authCodes"))
 		mkdir('authCodes', 0700);
@@ -38,11 +30,11 @@ function validate_auth($uuid, $authCode): void
 	unlink($filepath);
 	if ($authCode != $actualAuthCode)
 		die_with_http_code_json(400, ["success" => false, "error" => Errors::INVALID_AUTH_CODE]);
-	$user = validate_cas_token($casToken, $uuid);
-	die_with_http_code_json(200, ["success" => true, "user" => $user]);
+	$user = validate_cas_token($entityManager, $casToken, $uuid);
+	die_with_http_code_json(200, ["success" => true, "loggedUser" => $user]);
 }
 
-function validate_cas_token(string $casToken, string $uuid): LoggedUser
+function validate_cas_token(EntityManager $entityManager, string $casToken, string $uuid): LoggedUser
 {
 	// Dirty but needed to not change code between prod and dev lol...)
 	if (!str_contains(get_env("cas_auth"), "cas.bordeaux-inp.fr")) {
@@ -58,85 +50,66 @@ function validate_cas_token(string $casToken, string $uuid): LoggedUser
 
 	$resStr = curl_exec($ch);
 	curl_close($ch);
-	$res = json_decode($resStr, true)["serviceResponse"];
-	if (array_key_exists("authenticationFailure", $res)) {
+	$res = json_decode($resStr, true);
+	if (array_key_exists("authenticationFailure", $res["serviceResponse"])) {
 		die_with_http_code_json(400, ["success" => false, "error" => Errors::INVALID_TOKEN]);
 	}
-
-	return log_user($res["authenticationSuccess"], $uuid);
+	return log_user($entityManager, $res, $uuid);
 }
 
-function log_user(mixed $authenticationSuccess, string $uuid): LoggedUser
+function log_user(EntityManager $entityManager, mixed $res, string $uuid): LoggedUser
 {
-	$casUser = get_or_create_cas_user($authenticationSuccess["user"]);
-	$pdo = new CasLoginPDO();
-	check_if_player_banned($pdo, $casUser);
-	return login_player($pdo, $uuid, $casUser);
+	$casUser = get_or_create_cas_user($entityManager, $res);
+	check_if_player_banned($entityManager, $casUser);
+    check_if_player_logged_in($entityManager, $casUser);
+	return login_player($entityManager, $uuid, $casUser);
 
 
 }
 
-function login_player(CasLoginPDO $pdo, string $uuid, string $casUser)
+function check_if_player_logged_in(EntityManager $entityManager, CasUser $casUser): void
 {
-	$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_SILENT);
-	$smt = $pdo->prepare(Requests::LOG_USER);
-	$smt->bindValue(":user", $casUser);
-	$smt->bindValue(":uuid", $uuid);
-	$smt->execute();
-	$smt = $pdo->prepare(Requests::SEARCH_LOGGED_USER_WITH_ROLES_BY_LOGIN);
-	$smt->bindValue(":loginSearch", $casUser);
-	$smt->execute();
-	$users = [];
-	foreach ($smt as $row) {
-		$usr = new LoggedUser();
-		$usr->login = $row['user'];
-		$usr->uuid = $row['uuid'];
-		if (!array_key_exists($usr->login, $users)) {
-			$users[$usr->login] = $usr;
-		}
-		if (strlen($row['role']) > 0)
-			$users[$usr->login]->roles[] = Role::from($row['role']);
-	}
-	return $users[$casUser];
+    $userRepo = $entityManager->getRepository(LoggedUser::class);
+    if($userRepo->findOneBy(["user" => $casUser]))
+        die_with_http_code_json(400, ["success" => false, "error" => Errors::USER_ALREADY_LOGGED_IN]);
 }
 
-function check_if_player_banned(CasLoginPDO $pdo, $casUser): void
+function login_player(EntityManager $entityManager, string $uuid, CasUser $casUser): LoggedUser
 {
-	$smt = $pdo->prepare(Requests::SEARCH_NOT_EXPIRED_BAN_BY_USER);
-	$smt->bindValue(":userSearch", $casUser);
-	$smt->execute();
-	if ($smt->rowCount() > 0) {
-		$row = $smt->fetch();
-		$ban = new Ban();
-		$ban->bannedUser = $row['banned'];
-		$ban->banner = $row['banner'];
-		$ban->reason = $row['reason'];
-		$ban->timestamp = new DateTime($row['timestamp']);
-		$ban->expires = $row['expires'] === null ? null : new DateTime($row['expires']);
+    $logged = new LoggedUser($casUser, $uuid);
+    $entityManager->persist($logged);
+    $entityManager->flush();
+	return $logged;
+}
 
-		die_with_http_code_json(400, ["success" => false, "error" => Errors::USER_BANNED, "ban" => $ban]);
-	}
+function check_if_player_banned(EntityManager $entityManager, CasUser $casUser): void
+{
+    $banRepo = $entityManager->getRepository(Ban::class);
+    $ban = $banRepo->findOneBy(["banned" => $casUser->getLogin()]);
+    if($ban !== null)
+        die_with_http_code_json(400, ["success" => false, "error" => Errors::USER_BANNED, "ban" => $ban]);
 }
 
 
-function get_or_create_cas_user(string $user): string
+function get_or_create_cas_user(EntityManager $entityManager, mixed $res): CasUser
 {
-	$pdo = new CasLoginPDO();
-	$smt = $pdo->prepare(Requests::SEARCH_CAS_USER_BY_LOGIN);
-	$smt->bindValue(":loginSearch", $user);
-	$smt->execute();
-	if ($smt->rowCount() > 0)
-		return $user;
-	$smt->closeCursor();
-	$pdo->beginTransaction();
-	$smt = $pdo->prepare(Requests::CREATE_CAS_USER);
-	$smt->bindValue(":login", $user);
-	if (!$smt->execute()) {
-		$pdo->rollback();
-		throw new RuntimeException("FATAL ERROR, CANNOT CREATE CAS USER");
-	}
-	$pdo->commit();
+    $userRepo = $entityManager->getRepository(CasUser::class);
+    $user = $userRepo->find($res["serviceResponse"]["authenticationSuccess"]["user"]);
+    if($user === null){
+        $user = new CasUser($res);
+        $entityManager->persist($user);
+        $entityManager->flush();
+    }
 	return $user;
 }
+if ($_SERVER["REQUEST_METHOD"] != "GET") {
+    http_response_code(405);
+    die('<h1>Method Not Allowed</h1>');
+}
 
-validate_auth($_GET['uuid'], $_GET['code']);
+if (!array_has_all_keys($_GET, "code", "uuid")) {
+    die_with_http_code_json(400, ["success" => false, "error" => Errors::NOT_ENOUGH_KEYS]);
+}
+require_once '../bootstrap.php';
+global $entityManager;
+validate_auth($entityManager, $_GET['uuid'], $_GET['code']);
