@@ -1,4 +1,7 @@
 <?php
+
+use Doctrine\ORM\EntityManager;
+
 require_once '../env.php';
 require_once '../utils.php';
 if ($_SERVER['REQUEST_METHOD'] != "GET") {
@@ -16,7 +19,9 @@ if (!array_key_exists("uuid", $_GET)) {
 if (!array_key_exists('ticket', $_GET)) {
 	redirect_cas();
 } else {
-	login_success();
+    require_once '../bootstrap.php';
+    global $entityManager;
+	login_success($entityManager);
 }
 
 function redirect_cas(): void
@@ -26,22 +31,20 @@ function redirect_cas(): void
 	header("Location: " . $casUrl);
 }
 
-function login_success(): void
+function login_success(EntityManager $entityManager): void
 {
-	$validationCode = create_auth_file();
+	$validationCode = create_auth_file($entityManager);
 	echo "Your validation code is <b>$validationCode</b>";
 	echo "<br/>You can keep the validation code and close the tab now.";
 }
 
-function create_auth_file(): string
+function create_auth_file(EntityManager $entityManager): string
 {
 	$casTok = $_GET["ticket"];
 	$validationCode = sprintf("%06d", mt_rand(1, 999999));
-	if (!is_dir("authCodes/"))
-		mkdir("authCodes/");
-	$fp = fopen("authCodes/" . $_GET["uuid"], "w");
-	fwrite($fp, "$validationCode\n$casTok");
-	fclose($fp);
+    $auth = new AuthCode($_GET['uuid'], $validationCode, $casTok);
+	$entityManager->persist($auth);
+    $entityManager->flush();
 	return $validationCode;
 }
 

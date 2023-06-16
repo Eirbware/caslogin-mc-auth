@@ -10,26 +10,17 @@ require_once '../Errors.php';
 
 #[NoReturn] function validate_auth(EntityManager $entityManager, string $uuid, string $authCode): void
 {
-	if (!is_dir("authCodes"))
-		mkdir('authCodes', 0700);
-	$filepath = "authCodes/$uuid";
-	$handle = fopen($filepath, 'r') or die_with_http_code_json(400, ["success" => false, "error" => Errors::NO_AUTH_CODE_FOR_UUID]);
-	if (time() - filectime($filepath) >= get_env("auth_code_expiry")) {
-		unlink($filepath);
+	$codeRepo = $entityManager->getRepository(AuthCode::class);
+    $auth = $codeRepo->findOneBy(["uuid" => $uuid]) or die_with_http_code_json(400, ["success" => false, "error" => Errors::NO_AUTH_CODE_FOR_UUID]);
+    $now = new DateTime('now');
+    $entityManager->remove($auth);
+    $entityManager->flush();
+	if ($now->getTimestamp() - $auth->getCreated()->getTimestamp() >= get_env("auth_code_expiry")) {
 		die_with_http_code_json(400, ["success" => false, "error" => Errors::AUTH_CODE_EXPIRED]);
 	}
-
-	if (feof($handle))
-		die_with_http_code(500, "<h1>Internal Server Error</h1>");
-	$actualAuthCode = trim(fgets($handle));
-	if (feof($handle))
-		die_with_http_code(500, "<h1>Internal Server Error</h1>");
-	$casToken = trim(fgets($handle));
-	fclose($handle);
-	unlink($filepath);
-	if ($authCode != $actualAuthCode)
+	if ($authCode != $auth->getCode())
 		die_with_http_code_json(400, ["success" => false, "error" => Errors::INVALID_AUTH_CODE]);
-	$user = validate_cas_token($entityManager, $casToken, $uuid);
+	$user = validate_cas_token($entityManager, $auth->getToken(), $uuid);
 	die_with_http_code_json(200, ["success" => true, "loggedUser" => $user]);
 }
 
