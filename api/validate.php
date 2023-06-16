@@ -11,10 +11,10 @@ require_once '../Errors.php';
 #[NoReturn] function validate_auth(EntityManager $entityManager, string $uuid, string $authCode): void
 {
 	$codeRepo = $entityManager->getRepository(AuthCode::class);
-    $auth = $codeRepo->findOneBy(["uuid" => $uuid]) or die_with_http_code_json(400, ["success" => false, "error" => Errors::NO_AUTH_CODE_FOR_UUID]);
-    $now = new DateTime('now');
-    $entityManager->remove($auth);
-    $entityManager->flush();
+	$auth = $codeRepo->findOneBy(["uuid" => $uuid]) or die_with_http_code_json(400, ["success" => false, "error" => Errors::NO_AUTH_CODE_FOR_UUID]);
+	$now = new DateTime('now');
+	$entityManager->remove($auth);
+	$entityManager->flush();
 	if ($now->getTimestamp() - $auth->getCreated()->getTimestamp() >= get_env("auth_code_expiry")) {
 		die_with_http_code_json(400, ["success" => false, "error" => Errors::AUTH_CODE_EXPIRED]);
 	}
@@ -51,7 +51,7 @@ function log_user(EntityManager $entityManager, mixed $res, string $uuid): Logge
 {
 	$casUser = get_or_create_cas_user($entityManager, $res);
 	check_if_player_banned($entityManager, $casUser);
-    check_if_player_logged_in($entityManager, $casUser);
+	check_if_player_logged_in($entityManager, $casUser);
 	return login_player($entityManager, $uuid, $casUser);
 
 
@@ -59,46 +59,47 @@ function log_user(EntityManager $entityManager, mixed $res, string $uuid): Logge
 
 function check_if_player_logged_in(EntityManager $entityManager, CasUser $casUser): void
 {
-    $userRepo = $entityManager->getRepository(LoggedUser::class);
-    if($userRepo->findOneBy(["user" => $casUser]))
-        die_with_http_code_json(400, ["success" => false, "error" => Errors::USER_ALREADY_LOGGED_IN]);
+	$userRepo = $entityManager->getRepository(LoggedUser::class);
+	if ($userRepo->findOneBy(["user" => $casUser]))
+		die_with_http_code_json(400, ["success" => false, "error" => Errors::USER_ALREADY_LOGGED_IN]);
 }
 
 function login_player(EntityManager $entityManager, string $uuid, CasUser $casUser): LoggedUser
 {
-    $logged = new LoggedUser($casUser, $uuid);
-    $entityManager->persist($logged);
-    $entityManager->flush();
+	$logged = new LoggedUser($casUser, $uuid);
+	$entityManager->persist($logged);
+	$entityManager->flush();
 	return $logged;
 }
 
 function check_if_player_banned(EntityManager $entityManager, CasUser $casUser): void
 {
-    $banRepo = $entityManager->getRepository(Ban::class);
-    $ban = $banRepo->findOneBy(["banned" => $casUser->getLogin()]);
-    if($ban !== null)
-        die_with_http_code_json(400, ["success" => false, "error" => Errors::USER_BANNED, "ban" => $ban]);
+	$banRepo = $entityManager->getRepository(Ban::class);
+	$ban = $banRepo->findOneBy(["banned" => $casUser->getLogin()]);
+	if ($ban !== null)
+		die_with_http_code_json(400, ["success" => false, "error" => Errors::USER_BANNED, "ban" => $ban]);
 }
 
 
 function get_or_create_cas_user(EntityManager $entityManager, mixed $res): CasUser
 {
-    $userRepo = $entityManager->getRepository(CasUser::class);
-    $user = $userRepo->find($res["serviceResponse"]["authenticationSuccess"]["user"]);
-    if($user === null){
-        $user = new CasUser($res);
-        $entityManager->persist($user);
-        $entityManager->flush();
-    }
+	$userRepo = $entityManager->getRepository(CasUser::class);
+	$user = $userRepo->find($res["serviceResponse"]["authenticationSuccess"]["user"]);
+	if ($user === null) {
+		$user = new CasUser($res);
+		$entityManager->persist($user);
+		$entityManager->flush();
+	}
 	return $user;
 }
+
 if ($_SERVER["REQUEST_METHOD"] != "GET") {
-    http_response_code(405);
-    die('<h1>Method Not Allowed</h1>');
+	http_response_code(405);
+	die('<h1>Method Not Allowed</h1>');
 }
 
 if (!array_has_all_keys($_GET, "code", "uuid")) {
-    die_with_http_code_json(400, ["success" => false, "error" => Errors::NOT_ENOUGH_KEYS]);
+	die_with_http_code_json(400, ["success" => false, "error" => Errors::NOT_ENOUGH_KEYS]);
 }
 require_once '../bootstrap.php';
 global $entityManager;

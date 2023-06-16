@@ -19,8 +19,8 @@ if (!array_key_exists("uuid", $_GET)) {
 if (!array_key_exists('ticket', $_GET)) {
 	redirect_cas();
 } else {
-    require_once '../bootstrap.php';
-    global $entityManager;
+	require_once '../bootstrap.php';
+	global $entityManager;
 	login_success($entityManager);
 }
 
@@ -42,9 +42,9 @@ function create_auth_file(EntityManager $entityManager): string
 {
 	$casTok = $_GET["ticket"];
 	$validationCode = sprintf("%06d", mt_rand(1, 999999));
-    $auth = new AuthCode($_GET['uuid'], $validationCode, $casTok);
+	$auth = new AuthCode($_GET['uuid'], $validationCode, $casTok);
 	$entityManager->persist($auth);
-    $entityManager->flush();
+	$entityManager->flush();
 	return $validationCode;
 }
 

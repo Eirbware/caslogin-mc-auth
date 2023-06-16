@@ -9,7 +9,7 @@ require_once '../Errors.php';
 
 function handle_add_roles(EntityManager $entityManager, CasUser $user, Role $role): void
 {
-	if($user->getRoles()->contains($role))
+	if ($user->getRoles()->contains($role))
 		die_with_http_code_json(400, ["success" => false, "error" => Errors::USER_HAS_ROLE]);
 	$user->getRoles()->add($role);
 	$entityManager->flush();
@@ -17,7 +17,7 @@ function handle_add_roles(EntityManager $entityManager, CasUser $user, Role $rol
 
 function handle_del_roles(EntityManager $entityManager, CasUser $user, Role $role): void
 {
-	if(!$user->getRoles()->contains($role))
+	if (!$user->getRoles()->contains($role))
 		die_with_http_code_json(400, ["succes" => false, "error" => Errors::USER_DOES_NOT_HAVE_ROLE]);
 	$user->getRoles()->removeElement($role);
 	$entityManager->flush();
@@ -36,13 +36,13 @@ function get_user_or_die(EntityRepository $userRepo): CasUser
 	return $user;
 }
 
-if($_SERVER['REQUEST_METHOD'] != "POST" && $_SERVER['REQUEST_METHOD'] != "DELETE")
+if ($_SERVER['REQUEST_METHOD'] != "POST" && $_SERVER['REQUEST_METHOD'] != "DELETE")
 	die_with_http_code(405, "<h1>Method not allowed</h1>");
 
 $json = file_get_contents('php://input');
 $_POST = json_decode($json, true);
 
-if(!array_has_all_keys($_POST, "user", "role"))
+if (!array_has_all_keys($_POST, "user", "role"))
 	die_with_http_code_json(400, ["success" => false, "error" => Errors::NOT_ENOUGH_KEYS]);
 
 require_once '../bootstrap.php';
@@ -50,7 +50,7 @@ global $entityManager;
 $user = get_user_or_die($entityManager->getRepository(CasUser::class));
 $role = get_role_or_die($entityManager->getRepository(Role::class));
 
-if($_SERVER['REQUEST_METHOD'] == "POST")
+if ($_SERVER['REQUEST_METHOD'] == "POST")
 	handle_add_roles($entityManager, $user, $role);
 else
 	handle_del_roles($entityManager, $user, $role);
