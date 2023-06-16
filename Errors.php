@@ -16,7 +16,6 @@ enum Errors implements JsonSerializable
 	case INVALID_TOKEN;
 	case USER_BANNED;
     case USER_ALREADY_LOGGED_IN;
-
     case USER_NOT_LOGGED_IN;
 
     public function jsonSerialize(): string
