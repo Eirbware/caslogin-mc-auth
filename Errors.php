@@ -17,7 +17,9 @@ enum Errors implements JsonSerializable
 	case USER_BANNED;
     case USER_ALREADY_LOGGED_IN;
 
-	public function jsonSerialize(): string
+    case USER_NOT_LOGGED_IN;
+
+    public function jsonSerialize(): string
 	{
 		return $this->name;
 	}
