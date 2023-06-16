@@ -7,7 +7,7 @@ use Doctrine\ORM\Mapping as ORM;
 class LoggedUser implements \JsonSerializable
 {
 	#[ORM\Id]
-    #[ORM\GeneratedValue]
+	#[ORM\GeneratedValue]
 	#[ORM\Column(type: 'integer')]
 	private int $id;
 	#[ORM\OneToOne(targetEntity: CasUser::class)]
@@ -16,13 +16,13 @@ class LoggedUser implements \JsonSerializable
 	#[Orm\Column(type: 'string')]
 	private string $uuid;
 
-    public function __construct(CasUser $user, string $uuid)
-    {
-        $this->user = $user;
-        $this->uuid = $uuid;
-    }
+	public function __construct(CasUser $user, string $uuid)
+	{
+		$this->user = $user;
+		$this->uuid = $uuid;
+	}
 
-    public function jsonSerialize(): array
+	public function jsonSerialize(): array
 	{
 		return [
 			"user" => $this->user,

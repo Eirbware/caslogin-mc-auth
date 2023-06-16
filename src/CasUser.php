@@ -22,7 +22,8 @@ class CasUser implements \JsonSerializable
 	#[Orm\ManyToMany(targetEntity: Role::class)]
 	private Collection $roles;
 
-	public function __construct($json){
+	public function __construct($json)
+	{
 		$res = $json["serviceResponse"]["authenticationSuccess"];
 		$this->login = $res["user"];
 		$this->ecole = $res["attributes"]["ecole"][0];
