@@ -33,13 +33,16 @@ function redirect_cas(): void
 
 function login_success(EntityManager $entityManager): void
 {
-	$validationCode = create_auth_file($entityManager);
+	$validationCode = create_auth_code($entityManager);
 	echo "Your validation code is <b>$validationCode</b>";
 	echo "<br/>You can keep the validation code and close the tab now.";
 }
 
-function create_auth_file(EntityManager $entityManager): string
+function create_auth_code(EntityManager $entityManager): string
 {
+	$oldAuth = $entityManager->getRepository(AuthCode::class)->findOneBy(["uuid" => $_GET['uuid']]);
+	if($oldAuth !== null)
+		$entityManager->remove($oldAuth);
 	$casTok = $_GET["ticket"];
 	$validationCode = sprintf("%06d", mt_rand(1, 999999));
 	$auth = new AuthCode($_GET['uuid'], $validationCode, $casTok);
