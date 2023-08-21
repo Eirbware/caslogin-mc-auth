@@ -41,8 +41,10 @@ function login_success(EntityManager $entityManager): void
 function create_auth_code(EntityManager $entityManager): string
 {
 	$oldAuth = $entityManager->getRepository(AuthCode::class)->findOneBy(["uuid" => $_GET['uuid']]);
-	if($oldAuth !== null)
+	if($oldAuth !== null){
 		$entityManager->remove($oldAuth);
+		$entityManager->flush();
+	}
 	$casTok = $_GET["ticket"];
 	$validationCode = sprintf("%06d", mt_rand(1, 999999));
 	$auth = new AuthCode($_GET['uuid'], $validationCode, $casTok);
