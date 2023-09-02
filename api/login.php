@@ -12,7 +12,7 @@ if ($_SERVER['REQUEST_METHOD'] != "GET") {
 	die();
 }
 
-if (!array_key_exists("uuid", $_GET)) {
+if (!array_key_exists("token", $_GET)) {
 	http_response_code(400);
 	echo '<h1>Bad Request</h1>';
 	die();
@@ -23,7 +23,7 @@ if (!array_key_exists('ticket', $_GET)) {
 } else {
 	require_once '../bootstrap.php';
 	global $entityManager;
-	login_success($entityManager, $_GET["ticket"], $_GET["uuid"]);
+	login_success($entityManager, $_GET["ticket"], $_GET["token"]);
 }
 
 function redirect_cas(): void
@@ -33,11 +33,11 @@ function redirect_cas(): void
 	header("Location: " . $casUrl);
 }
 
-function validate_cas_token(string $casToken, string $uuid): mixed
+function validate_cas_token(string $casToken, string $token): mixed
 {
     // Dirty but needed to not change code between prod and dev lol...)
     if (!str_contains(get_env("cas_auth"), "cas.bordeaux-inp.fr")) {
-        $servUrl = rawurlencode(get_protocol() . $_SERVER["HTTP_HOST"] . "/api/login.php?uuid=$uuid");
+        $servUrl = rawurlencode(get_protocol() . $_SERVER["HTTP_HOST"] . "/api/login.php?token=$token");
         $serviceUrl = get_env("cas_auth") . "?service=" . base64_encode($servUrl);
     } else
         $serviceUrl = get_current_request_url();
@@ -84,14 +84,25 @@ function login_player(EntityManager $entityManager, string $uuid, CasUser $casUs
     return $logged;
 }
 
-#[NoReturn] function login_success(EntityManager $entityManager, string $ticket, string $uuid): void
+#[NoReturn] function login_success(EntityManager $entityManager, string $ticket, string $token): void
 {
-    $res = validate_cas_token($ticket, $uuid);
+
+    $res = validate_cas_token($ticket, $token);
     $casUser = get_or_create_cas_user($entityManager, $res);
     check_if_player_banned($entityManager, $casUser);
 //    check_if_player_logged_in($entityManager, $casUser);
+    $uuid = get_uuid_from_token_or_die($entityManager, $token);
     login_player($entityManager, $uuid, $casUser);
     die_with_http_code(200, "Successfully logged in. Please wait");
+}
+
+function get_uuid_from_token_or_die(EntityManager $entityManager, string $token): string
+{
+    $csrfRepo = $entityManager->getRepository(CSRFToken::class);
+    $csrfTok = $csrfRepo->findOneBy(["token" => $token]);
+    if($csrfTok === null)
+        die_with_http_code(400, "<h1>Invalid CSRF token!</h1>");
+    return $csrfTok->getUuid();
 }
 
 function create_auth_code(EntityManager $entityManager): string

@@ -26,6 +26,18 @@ create index banned
 create index banner
     on BANS (banner);
 
+create table CSRFTOKENS
+(
+    id    int auto_increment
+        primary key,
+    token char(32) charset latin1 not null,
+    uuid  char(36) charset latin1 not null,
+    constraint csrf
+        unique (token),
+    constraint uuid
+        unique (uuid)
+);
+
 create table LOGGED
 (
     id    int auto_increment
@@ -62,4 +74,3 @@ create table USER_ROLES
 create index role
     on USER_ROLES (role);
 
-INSERT INTO ROLES VALUES ('admin'), ('moderator')
