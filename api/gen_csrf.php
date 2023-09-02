@@ -34,7 +34,7 @@ function generate_csrf(EntityManager $entityManager, string $uuid, int $maxRetri
     if($retryCount > $maxRetries)
         die_with_http_code_json(500, ["success" => false, "error" => Errors::COULD_NOT_GENERATE_CSRF, "exception" => $causingEx]);
     try {
-        $newCsrf = new CSRFToken($uuid);
+        $newCsrf = new CSRFToken($uuid, get_env("csrf_expiry"));
         $entityManager->persist($newCsrf);
         $entityManager->flush();
         die_with_http_code_json(200, ["success" => true, "token" => $newCsrf->getToken()]);

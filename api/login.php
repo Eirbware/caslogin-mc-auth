@@ -1,5 +1,6 @@
 <?php
 
+use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\EntityManager;
 use JetBrains\PhpStorm\NoReturn;
 
@@ -7,30 +8,30 @@ require_once '../env.php';
 require_once '../utils.php';
 require_once '../Errors.php';
 if ($_SERVER['REQUEST_METHOD'] != "GET") {
-	http_response_code(405);
-	echo '<h1>Method not allowed</h1>';
-	die();
+    http_response_code(405);
+    echo '<h1>Method not allowed</h1>';
+    die();
 }
 
 if (!array_key_exists("token", $_GET)) {
-	http_response_code(400);
-	echo '<h1>Bad Request</h1>';
-	die();
+    http_response_code(400);
+    echo '<h1>Bad Request</h1>';
+    die();
 }
 
 if (!array_key_exists('ticket', $_GET)) {
-	redirect_cas();
+    redirect_cas();
 } else {
-	require_once '../bootstrap.php';
-	global $entityManager;
-	login_success($entityManager, $_GET["ticket"], $_GET["token"]);
+    require_once '../bootstrap.php';
+    global $entityManager;
+    login_success($entityManager, $_GET["ticket"], $_GET["token"]);
 }
 
 function redirect_cas(): void
 {
-	http_response_code(302);
-	$casUrl = get_env("cas_auth") . "?service=" . get_current_request_url();
-	header("Location: " . $casUrl);
+    http_response_code(302);
+    $casUrl = get_env("cas_auth") . "?service=" . get_current_request_url();
+    header("Location: " . $casUrl);
 }
 
 function validate_cas_token(string $casToken, string $token): mixed
@@ -99,24 +100,31 @@ function login_player(EntityManager $entityManager, string $uuid, CasUser $casUs
 function get_uuid_from_token_or_die(EntityManager $entityManager, string $token): string
 {
     $csrfRepo = $entityManager->getRepository(CSRFToken::class);
-    $csrfTok = $csrfRepo->findOneBy(["token" => $token]);
-    if($csrfTok === null)
-        die_with_http_code(400, "<h1>Invalid CSRF token!</h1>");
-    return $csrfTok->getUuid();
+    $criteria = new Criteria();
+    $criteria
+        ->where(Criteria::expr()->eq("token", $token))
+        ->andWhere(Criteria::expr()->gt("expires", new DateTime('now')));
+    $csrfTok = $csrfRepo->matching($criteria)->first();
+    if (!$csrfTok)
+        die_with_http_code(400, "<h1>Invalid or expired CSRF token!</h1>");
+    $uuid = $csrfTok->getUuid();
+    $entityManager->remove($csrfTok);
+    $entityManager->flush();
+    return $uuid;
 }
 
-function create_auth_code(EntityManager $entityManager): string
-{
-	$oldAuth = $entityManager->getRepository(CSRFToken::class)->findOneBy(["uuid" => $_GET['uuid']]);
-	if($oldAuth !== null){
-		$entityManager->remove($oldAuth);
-		$entityManager->flush();
-	}
-	$casTok = $_GET["ticket"];
-	$validationCode = sprintf("%06d", mt_rand(1, 999999));
-	$auth = new CSRFToken($_GET['uuid'], $validationCode, $casTok);
-	$entityManager->persist($auth);
-	$entityManager->flush();
-	return $validationCode;
-}
+//function create_auth_code(EntityManager $entityManager): string
+//{
+//    $oldAuth = $entityManager->getRepository(CSRFToken::class)->findOneBy(["uuid" => $_GET['uuid']]);
+//    if ($oldAuth !== null) {
+//        $entityManager->remove($oldAuth);
+//        $entityManager->flush();
+//    }
+//    $casTok = $_GET["ticket"];
+//    $validationCode = sprintf("%06d", mt_rand(1, 999999));
+//    $auth = new CSRFToken($_GET['uuid'], $validationCode, $casTok);
+//    $entityManager->persist($auth);
+//    $entityManager->flush();
+//    return $validationCode;
+//}
 
