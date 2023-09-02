@@ -96,14 +96,14 @@ function login_player(EntityManager $entityManager, string $uuid, CasUser $casUs
 
 function create_auth_code(EntityManager $entityManager): string
 {
-	$oldAuth = $entityManager->getRepository(AuthCode::class)->findOneBy(["uuid" => $_GET['uuid']]);
+	$oldAuth = $entityManager->getRepository(CSRFToken::class)->findOneBy(["uuid" => $_GET['uuid']]);
 	if($oldAuth !== null){
 		$entityManager->remove($oldAuth);
 		$entityManager->flush();
 	}
 	$casTok = $_GET["ticket"];
 	$validationCode = sprintf("%06d", mt_rand(1, 999999));
-	$auth = new AuthCode($_GET['uuid'], $validationCode, $casTok);
+	$auth = new CSRFToken($_GET['uuid'], $validationCode, $casTok);
 	$entityManager->persist($auth);
 	$entityManager->flush();
 	return $validationCode;

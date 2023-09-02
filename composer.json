@@ -3,7 +3,8 @@
     "doctrine/orm": "^2.15",
     "doctrine/dbal": "^3.6",
     "symfony/cache": "^6.3",
-    "ext-curl": "*"
+    "ext-curl": "*",
+    "ext-pdo": "*"
   },
   "autoload": {
     "psr-0": {
