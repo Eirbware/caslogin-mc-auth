@@ -93,8 +93,22 @@ function login_player(EntityManager $entityManager, string $uuid, CasUser $casUs
     check_if_player_banned($entityManager, $casUser);
 //    check_if_player_logged_in($entityManager, $casUser);
     $uuid = get_uuid_from_token_or_die($entityManager, $token);
+    check_already_logged_user($entityManager, $casUser);
+    check_already_logged_uuid($entityManager, $uuid);
     login_player($entityManager, $uuid, $casUser);
     die_with_http_code(200, "Successfully logged in. Please wait");
+}
+
+function check_already_logged_uuid(EntityManager $entityManager, string $uuid)
+{
+    if ($entityManager->getRepository(LoggedUser::class)->findOneBy(["uuid" => $uuid]))
+        die_with_http_code(400, "<h1>You are already logged in!</h1>");
+}
+
+function check_already_logged_user(EntityManager $entityManager, CasUser $casUser)
+{
+    if ($entityManager->getRepository(LoggedUser::class)->findOneBy(["user" => $casUser]))
+        die_with_http_code(400, "<h1><emph>" . $casUser->getLogin() . "</emph> is already logged in!</h1>");
 }
 
 function get_uuid_from_token_or_die(EntityManager $entityManager, string $token): string
