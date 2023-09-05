@@ -30,7 +30,7 @@ create table CSRFTOKENS
 (
     id      int auto_increment
         primary key,
-    token   char(32) charset latin1 not null,
+    token   char(10) charset latin1 not null,
     uuid    char(36) charset latin1 not null,
     expires datetime                not null,
     constraint csrf

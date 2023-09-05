@@ -23,10 +23,12 @@ class CSRFToken
     public function __construct(string $uuid, int $expiry_seconds)
     {
         $this->uuid = $uuid;
-        $this->token = md5(uniqid(mt_rand(), true));
+        $MD5_LEN = 32;
+        $tokenLength = 10;
+        $this->token = substr(md5(microtime()), rand(0, $MD5_LEN-$tokenLength-1), $tokenLength);
         $this->expires = new DateTime('now');
         $this->expires->add(new DateInterval("PT" . $expiry_seconds . "S"));
-	}
+    }
 
     /**
      * @return int
