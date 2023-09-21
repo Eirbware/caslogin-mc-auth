@@ -61,6 +61,8 @@ create table ROLES
         primary key
 );
 
+INSERT INTO ROLES VALUES ('ADMINISTRATOR'), ('MODERATOR');
+
 create table USER_ROLES
 (
     login varchar(64) not null,
