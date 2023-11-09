@@ -15,7 +15,7 @@ class Ban implements \JsonSerializable
 	private CasUser $banned;
 	#[ORM\ManyToOne(targetEntity: CasUser::class)]
 	#[ORM\JoinColumn(name: 'banner', referencedColumnName: 'login')]
-	private CasUser $banner;
+	private ?CasUser $banner;
 	#[ORM\Column(type: "string", nullable: true)]
 	private ?string $reason;
 	#[ORM\Column(type: "datetime")]

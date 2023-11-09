@@ -45,18 +45,20 @@ function ban_user(EntityManager $entityManager, CasUser $banned, CasUser $banner
 	$json = file_get_contents('php://input');
 	$_POST = json_decode($json, true);
 
-	if (!array_has_all_keys($_POST, "banner", "banned"))
+	if (!array_has_all_keys($_POST, "banned"))
 		die_with_http_code(400, "<h1>Bad Request</h1>");
 
 	check_expires_correct_timestamp();
-	$banned = get_banned_or_die($entityManager->getRepository(CasUser::class));
-	$banner = get_banner_or_die($entityManager->getRepository(CasUser::class));
+    $banner = array_key_exists("banner", $_POST)
+        ? get_banner_or_die($entityManager->getRepository(CasUser::class))
+        : null;
+    $banned = get_banned_or_die($entityManager->getRepository(CasUser::class));
 
 	ban_user($entityManager, $banned, $banner);
 	die_with_http_code_json(200, ["success" => true]);
 }
 
-function handle_get_bans(EntityRepository $banRepo)
+#[NoReturn] function handle_get_bans(EntityRepository $banRepo)
 {
 	die_with_http_code_json(200, ["success" => true, "bans" => $banRepo->findAll()]);
 }
