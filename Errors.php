@@ -19,6 +19,8 @@ enum Errors implements JsonSerializable
     case USER_NOT_LOGGED_IN;
     case COULD_NOT_GENERATE_CSRF;
 
+    case INVALID_PARAMETERS;
+
     public function jsonSerialize(): string
 	{
 		return $this->name;
