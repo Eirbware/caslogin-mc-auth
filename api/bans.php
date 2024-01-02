@@ -33,8 +33,9 @@ function check_expires_correct_timestamp(): void
         die_with_http_code_json(400, ["success" => false, "error" => Errors::EXPIRES_NOT_A_TIMESTAMP]);
 }
 
-function ban_user(EntityManager $entityManager, CasUser $banned, CasUser $banner): void
+function ban_user(EntityManager $entityManager, CasUser $banned, ?CasUser $banner): void
 {
+    check_user_not_banned_or_die($entityManager, $banned);
     $ban = new Ban($banned,
         $banner,
         array_key_exists("reason", $_POST) ? $_POST['reason'] : null,
@@ -43,13 +44,32 @@ function ban_user(EntityManager $entityManager, CasUser $banned, CasUser $banner
     $entityManager->flush();
 }
 
+function check_user_not_banned_or_die(EntityManager $entityManager, CasUser $banned): void
+{
+    $banRepo = $entityManager->getRepository(Ban::class);
+    $notExpiredCriteria = Criteria::create()
+        ->where(Criteria::expr()->isNull('expires'))
+        ->orWhere(Criteria::expr()->gt('expires', new DateTime()));
+
+    $bannedUserCriteria = Criteria::create()
+        ->where(Criteria::expr()->eq('banned', $banned));
+
+    $query = $banRepo->createQueryBuilder("b")
+        ->addCriteria($notExpiredCriteria)
+        ->addCriteria($bannedUserCriteria)
+        ->getQuery();
+    if(count($query->getResult()) > 0){
+        die_with_http_code_json(400, ["success" => false, "error" => Errors::USER_ALREADY_BANNED]);
+    }
+}
+
 #[NoReturn] function handle_ban_user(EntityManager $entityManager): void
 {
     $json = file_get_contents('php://input');
     $_POST = json_decode($json, true);
 
     if (!array_has_all_keys($_POST, "banned"))
-        die_with_http_code(400, "<h1>Bad Request</h1>");
+        die_with_http_code_json(400, ["success" => false, "error" => Errors::NOT_ENOUGH_KEYS]);
 
     check_expires_correct_timestamp();
     $banner = array_key_exists("banner", $_POST)
@@ -65,7 +85,7 @@ function ban_user(EntityManager $entityManager, CasUser $banned, CasUser $banner
 {
     if (array_key_exists("expired", $_GET)) {
         $val = filter_var($_GET["expired"], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
-        if($_GET["expired"] === null){
+        if ($_GET["expired"] === null) {
             die_with_http_code_json(400, ["success" => false, "error" => Errors::INVALID_PARAMETERS]);
         }
         if ($_GET["expired"]) {
@@ -80,8 +100,7 @@ function ban_user(EntityManager $entityManager, CasUser $banned, CasUser $banner
 {
     $criteria = Criteria::create()
         ->where(Criteria::expr()->isNull('expires'))
-        ->orWhere(new Comparison('expires', Comparison::GT, new DateTime()))
-    ;
+        ->orWhere(Criteria::expr()->gt('expires', new DateTime()));
     $query = $banRepo->createQueryBuilder("b")->addCriteria($criteria)->getQuery();
     die_with_http_code_json(200, ["success" => true, "bans" => $query->getResult()]);
 }
@@ -89,9 +108,8 @@ function ban_user(EntityManager $entityManager, CasUser $banned, CasUser $banner
 #[NoReturn] function die_with_expired_bans(EntityRepository $banRepo): void
 {
     $criteria = Criteria::create()
-        ->where(new CompositeExpression(CompositeExpression::TYPE_NOT, [Criteria::expr()->isNull('expires')]))
-        ->andWhere(new Comparison('expires', Comparison::LTE, new DateTime()))
-    ;
+        ->where(Criteria::expr()->not(Criteria::expr()->isNull('expires')))
+        ->andWhere(Criteria::expr()->lte('expires', new DateTime()));
     $query = $banRepo->createQueryBuilder("b")->addCriteria($criteria)->getQuery();
 
     die_with_http_code_json(200, ["success" => true, "bans" => $query->getResult()]);

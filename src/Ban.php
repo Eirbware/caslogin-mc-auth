@@ -23,7 +23,7 @@ class Ban implements \JsonSerializable
 	#[ORM\Column(type: "datetime", nullable: true)]
 	private ?\DateTime $expires;
 
-	public function __construct(CasUser $banned, CasUser $banner, ?string $reason, ?DateTime $expires)
+	public function __construct(CasUser $banned, ?CasUser $banner, ?string $reason, ?DateTime $expires)
 	{
 		$this->banned = $banned;
 		$this->banner = $banner;
