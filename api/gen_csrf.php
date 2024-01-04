@@ -16,7 +16,7 @@ $json = file_get_contents('php://input');
 $_POST = json_decode($json, true);
 
 if (!array_key_exists("uuid", $_POST)) {
-    die_with_http_code_json(400, ["success" => false, "error" => Errors::NOT_ENOUGH_KEYS]);
+    throw_error(Errors::NOT_ENOUGH_KEYS);
 }
 
 require_once '../bootstrap.php';

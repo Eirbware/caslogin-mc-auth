@@ -52,7 +52,7 @@ function validate_cas_token(string $casToken, string $token): mixed
     curl_close($ch);
     $res = json_decode($resStr, true);
     if (array_key_exists("authenticationFailure", $res["serviceResponse"])) {
-        die_with_http_code_json(400, ["success" => false, "error" => Errors::INVALID_TOKEN]);
+        throw_error(Errors::INVALID_TOKEN);
     }
     return $res;
 }
@@ -74,7 +74,7 @@ function check_if_player_banned(EntityManager $entityManager, CasUser $casUser):
     $banRepo = $entityManager->getRepository(Ban::class);
     $ban = $banRepo->findOneBy(["banned" => $casUser->getLogin()]);
     if ($ban !== null)
-        die_with_http_code_json(400, ["success" => false, "error" => Errors::USER_BANNED, "ban" => $ban]);
+        throw_error(Errors::USER_BANNED, ["ban" => $ban]);
 }
 
 function login_player(EntityManager $entityManager, string $uuid, CasUser $casUser): LoggedUser

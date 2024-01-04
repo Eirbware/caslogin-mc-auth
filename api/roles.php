@@ -10,7 +10,7 @@ require_once '../Errors.php';
 function handle_add_roles(EntityManager $entityManager, CasUser $user, Role $role): void
 {
 	if ($user->getRoles()->contains($role))
-		die_with_http_code_json(400, ["success" => false, "error" => Errors::USER_HAS_ROLE]);
+		throw_error(Errors::USER_HAS_ROLE);
 	$user->getRoles()->add($role);
 	$entityManager->flush();
 }
@@ -18,7 +18,7 @@ function handle_add_roles(EntityManager $entityManager, CasUser $user, Role $rol
 function handle_del_roles(EntityManager $entityManager, CasUser $user, Role $role): void
 {
 	if (!$user->getRoles()->contains($role))
-		die_with_http_code_json(400, ["succes" => false, "error" => Errors::USER_DOES_NOT_HAVE_ROLE]);
+		throw_error(Errors::USER_DOES_NOT_HAVE_ROLE);
 	$user->getRoles()->removeElement($role);
 	$entityManager->flush();
 }
@@ -26,13 +26,13 @@ function handle_del_roles(EntityManager $entityManager, CasUser $user, Role $rol
 function get_role_or_die(EntityRepository $roleRepo): Role
 {
 
-	$role = $roleRepo->findOneBy(["id" => $_POST["role"]]) or die_with_http_code_json(400, ["success" => false, "error" => Errors::ROLE_NOT_IN_DATABASE]);
+	$role = $roleRepo->findOneBy(["id" => $_POST["role"]]) or throw_error(Errors::ROLE_NOT_IN_DATABASE);
 	return $role;
 }
 
 function get_user_or_die(EntityRepository $userRepo): CasUser
 {
-	$user = $userRepo->findOneBy(["login" => $_POST["user"]]) or die_with_http_code_json(400, ["success" => false, "error" => Errors::USER_NOT_IN_DATABASE]);
+	$user = $userRepo->findOneBy(["login" => $_POST["user"]]) or throw_error(Errors::USER_NOT_IN_DATABASE);
 	return $user;
 }
 
@@ -43,7 +43,7 @@ $json = file_get_contents('php://input');
 $_POST = json_decode($json, true);
 
 if (!array_has_all_keys($_POST, "user", "role"))
-	die_with_http_code_json(400, ["success" => false, "error" => Errors::NOT_ENOUGH_KEYS]);
+	throw_error(Errors::NOT_ENOUGH_KEYS);
 
 require_once '../bootstrap.php';
 global $entityManager;

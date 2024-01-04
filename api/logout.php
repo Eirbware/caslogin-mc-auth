@@ -21,7 +21,7 @@ function get_cas_user_or_die(EntityRepository $casUserRepo, string $user): CasUs
 {
 	$casUser = $casUserRepo->find($user);
 	if ($casUser === null)
-		die_with_http_code_json(400, ["success" => false, "error" => Errors::USER_NOT_IN_DATABASE]);
+		throw_error(Errors::USER_NOT_IN_DATABASE);
 	return $casUser;
 }
 
@@ -29,7 +29,7 @@ function get_logged_user_or_die(EntityRepository $loggedUserRepo, CasUser $casUs
 {
 	$loggedUser = $loggedUserRepo->findOneBy(["user" => $casUser]);
 	if ($loggedUser === null)
-		die_with_http_code_json(400, ["success" => false, "error" => Errors::USER_NOT_LOGGED_IN]);
+		throw_error(Errors::USER_NOT_LOGGED_IN);
 	return $loggedUser;
 }
 
@@ -40,7 +40,7 @@ $json = file_get_contents('php://input');
 $_POST = json_decode($json, true);
 
 if (!array_key_exists("user", $_POST))
-	die_with_http_code_json(400, ["success" => false, "error" => Errors::NOT_ENOUGH_KEYS]);
+	throw_error(Errors::NOT_ENOUGH_KEYS);
 
 require_once '../bootstrap.php';
 global $entityManager;

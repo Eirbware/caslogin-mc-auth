@@ -49,6 +49,7 @@ function array_has_all_keys(array $array, ...$keys): bool
 	return true;
 }
 
+
 #[NoReturn] function die_with_http_code(int $response_code, string $reason = ""): void
 {
 	http_response_code($response_code);
@@ -60,6 +61,10 @@ function array_has_all_keys(array $array, ...$keys): bool
 	http_response_code($response_code);
 	header("content-type: application/json");
 	die(json_encode($jsonObj));
+}
+
+#[NoReturn] function throw_error(Errors $error, array $additionalArgs = []): void{
+    die_with_http_code_json(400, array_merge(["success" => false, "error" => $error], $additionalArgs));
 }
 
 function get_protocol(): string
