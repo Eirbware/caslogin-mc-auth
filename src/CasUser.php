@@ -22,6 +22,9 @@ class CasUser implements \JsonSerializable
 	#[Orm\ManyToMany(targetEntity: Role::class)]
 	private Collection $roles;
 
+    #[ORM\OneToOne(mappedBy: 'user', targetEntity: LoggedUser::class)]
+    private ?LoggedUser $loggedUser;
+
 	public function __construct($json)
 	{
 		$res = $json["serviceResponse"]["authenticationSuccess"];
@@ -45,7 +48,8 @@ class CasUser implements \JsonSerializable
 		return [
 			"login" => $this->login,
 			"ecole" => $this->ecole,
-			"roles" => $this->getRoles()->toArray()
+			"roles" => $this->getRoles()->toArray(),
+            "uuid" => $this->loggedUser?->getUuid()
 		];
 	}
 

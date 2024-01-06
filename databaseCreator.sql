@@ -1,3 +1,12 @@
+SET FOREIGN_KEY_CHECKS = 0;
+DROP TABLE IF EXISTS BANS;
+DROP TABLE IF EXISTS CASUSERS;
+DROP TABLE IF EXISTS CSRFTOKENS;
+DROP TABLE IF EXISTS LOGGED;
+DROP TABLE IF EXISTS ROLES;
+DROP TABLE IF EXISTS USER_ROLES;
+SET FOREIGN_KEY_CHECKS = 1;
+
 create table CASUSERS
 (
     login varchar(64) not null
@@ -44,7 +53,7 @@ create table LOGGED
     id    int auto_increment
         primary key,
     login varchar(64) null,
-    uuid  varchar(36) null,
+    uuid  char(36) null,
     constraint login
         unique (login),
     constraint uuid

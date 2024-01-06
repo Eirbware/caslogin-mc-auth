@@ -10,7 +10,7 @@ class LoggedUser implements \JsonSerializable
 	#[ORM\GeneratedValue]
 	#[ORM\Column(type: 'integer')]
 	private int $id;
-	#[ORM\OneToOne(targetEntity: CasUser::class)]
+	#[ORM\OneToOne(inversedBy: 'loggedUser', targetEntity: CasUser::class)]
 	#[Orm\JoinColumn(name: 'login', referencedColumnName: 'login')]
 	private CasUser $user;
 	#[Orm\Column(type: 'string')]
