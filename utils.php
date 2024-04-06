@@ -74,7 +74,7 @@ function get_protocol(): string
 
 function get_current_request_url(): string
 {
-	return get_protocol() . $_SERVER["HTTP_HOST"] . $_SERVER["REQUEST_URI"];
+	return urlencode(get_protocol() . $_SERVER["HTTP_HOST"] . $_SERVER["REQUEST_URI"]);
 }
 
 function datetime_from_timestamp(int $timestamp): DateTime{

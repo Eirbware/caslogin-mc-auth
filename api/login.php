@@ -96,7 +96,7 @@ function login_player(EntityManager $entityManager, string $uuid, CasUser $casUs
     check_already_logged_user($entityManager, $casUser);
     check_already_logged_uuid($entityManager, $uuid);
     login_player($entityManager, $uuid, $casUser);
-    die_with_http_code(200, "Successfully logged in. Please wait");
+    die_with_http_code(200, "Successfully logged in. Please close this tab and return to the game");
 }
 
 function check_already_logged_uuid(EntityManager $entityManager, string $uuid)

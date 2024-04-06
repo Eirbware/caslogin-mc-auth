@@ -42,7 +42,7 @@ function check_user_not_banned_or_die(EntityManager $entityManager, CasUser $ban
     /** @var BanRepository $banRepo */
     $banRepo = $entityManager->getRepository(Ban::class);
 
-    if(count($banRepo->getCurrentBanOfUser($banned)) > 0){
+    if($banRepo->getCurrentBanOfUser($banned) !== null){
         die_with_http_code_json(400, ["success" => false, "error" => Errors::USER_ALREADY_BANNED]);
     }
 }
@@ -52,17 +52,26 @@ function check_user_not_banned_or_die(EntityManager $entityManager, CasUser $ban
     $json = file_get_contents('php://input');
     $_POST = json_decode($json, true);
 
-    if (!array_has_all_keys($_POST, "banned"))
+    if (!array_has_all_keys($_POST, "user"))
         die_with_http_code_json(400, ["success" => false, "error" => Errors::NOT_ENOUGH_KEYS]);
 
     check_expires_correct_timestamp();
     $banner = array_key_exists("banner", $_POST)
         ? get_user_or_die($entityManager->getRepository(CasUser::class), $_POST['banner'])
         : null;
-    $banned = get_user_or_die($entityManager->getRepository(CasUser::class), $_POST['banned']);
+    $banned = get_user_or_die($entityManager->getRepository(CasUser::class), $_POST['user']);
 
     ban_user($entityManager, $banned, $banner);
+    logout_user_if_logged($entityManager, $banned);
     die_with_http_code_json(200, ["success" => true]);
+}
+
+function logout_user_if_logged(EntityManager $entityManager, CasUser $banned): void
+{
+    if($banned->getLoggedUser() !== null){
+        $entityManager->remove($banned->getLoggedUser());
+        $entityManager->flush();
+    }
 }
 
 #[NoReturn] function handle_get_bans(BanRepository $banRepo): void

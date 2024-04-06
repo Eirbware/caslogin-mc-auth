@@ -8,53 +8,58 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Table(name: 'CASUSERS')]
 class CasUser implements \JsonSerializable
 {
-	#[ORM\Id]
-	#[ORM\Column(type: "string")]
-	private string $login;
+    #[ORM\Id]
+    #[ORM\Column(type: "string")]
+    private string $login;
 
-	#[ORM\Column(type: "string")]
-	private string $ecole;
+    #[ORM\Column(type: "string")]
+    private string $ecole;
 
-	/** @var Collection<string, Role> */
-	#[ORM\JoinTable(name: 'USER_ROLES')]
-	#[ORM\JoinColumn(name: 'login', referencedColumnName: 'login')]
-	#[Orm\InverseJoinColumn(name: 'role', referencedColumnName: 'id')]
-	#[Orm\ManyToMany(targetEntity: Role::class)]
-	private Collection $roles;
+    /** @var Collection<string, Role> */
+    #[ORM\JoinTable(name: 'USER_ROLES')]
+    #[ORM\JoinColumn(name: 'login', referencedColumnName: 'login')]
+    #[Orm\InverseJoinColumn(name: 'role', referencedColumnName: 'id')]
+    #[Orm\ManyToMany(targetEntity: Role::class)]
+    private Collection $roles;
 
     #[ORM\OneToOne(mappedBy: 'user', targetEntity: LoggedUser::class)]
     private ?LoggedUser $loggedUser;
 
-	public function __construct($json)
-	{
-		$res = $json["serviceResponse"]["authenticationSuccess"];
-		$this->login = $res["user"];
-		$this->ecole = $res["attributes"]["ecole"][0];
-		$this->roles = new ArrayCollection();
-	}
+    public function __construct($json)
+    {
+        $res = $json["serviceResponse"]["authenticationSuccess"];
+        $this->login = $res["user"];
+        $this->ecole = $res["attributes"]["ecole"][0];
+        $this->roles = new ArrayCollection();
+    }
 
-	public function getLogin(): string
-	{
-		return $this->login;
-	}
+    public function getLogin(): string
+    {
+        return $this->login;
+    }
 
-	public function getEcole(): string
-	{
-		return $this->ecole;
-	}
+    public function getEcole(): string
+    {
+        return $this->ecole;
+    }
 
-	public function jsonSerialize(): array
-	{
-		return [
-			"login" => $this->login,
-			"ecole" => $this->ecole,
-			"roles" => $this->getRoles()->toArray(),
+    public function jsonSerialize(): array
+    {
+        return [
+            "login" => $this->login,
+            "ecole" => $this->ecole,
+            "roles" => $this->getRoles()->toArray(),
             "uuid" => $this->loggedUser?->getUuid()
-		];
-	}
+        ];
+    }
 
-	public function getRoles(): Collection
-	{
-		return $this->roles;
-	}
+    public function getLoggedUser(): ?LoggedUser
+    {
+        return $this->loggedUser;
+    }
+
+    public function getRoles(): Collection
+    {
+        return $this->roles;
+    }
 }
