@@ -15,6 +15,9 @@ class CasUser implements \JsonSerializable
     #[ORM\Column(type: "string")]
     private string $ecole;
 
+    #[ORM\Column(type: "string")]
+    private string $diplome;
+
     /** @var Collection<string, Role> */
     #[ORM\JoinTable(name: 'USER_ROLES')]
     #[ORM\JoinColumn(name: 'login', referencedColumnName: 'login')]
@@ -30,6 +33,7 @@ class CasUser implements \JsonSerializable
         $res = $json["serviceResponse"]["authenticationSuccess"];
         $this->login = $res["user"];
         $this->ecole = $res["attributes"]["ecole"][0];
+        $this->diplome = $res["attributes"]["diplome"][0];
         $this->roles = new ArrayCollection();
     }
 
@@ -48,7 +52,8 @@ class CasUser implements \JsonSerializable
         return [
             "login" => $this->login,
             "ecole" => $this->ecole,
-            "roles" => $this->getRoles()->toArray(),
+            "roles" => $this->roles->toArray(),
+            "diplome" => $this->diplome,
             "uuid" => $this->loggedUser?->getUuid()
         ];
     }

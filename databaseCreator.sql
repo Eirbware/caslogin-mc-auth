@@ -11,7 +11,8 @@ create table CASUSERS
 (
     login varchar(64) not null
         primary key,
-    ecole varchar(64) null
+    ecole varchar(64) not null,
+    diplome char(6) not null
 );
 
 create table BANS
