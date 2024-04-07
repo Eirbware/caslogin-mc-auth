@@ -38,10 +38,10 @@ function validate_cas_token(string $casToken, string $token): mixed
 {
     // Dirty but needed to not change code between prod and dev lol...)
     if (!str_contains(get_env("cas_auth"), "cas.bordeaux-inp.fr")) {
-        $servUrl = rawurlencode(get_protocol() . $_SERVER["HTTP_HOST"] . "/api/login.php?token=$token");
+        $servUrl = rawurlencode(remove_single_get_param(get_current_request_url(), "ticket"));
         $serviceUrl = get_env("cas_auth") . "?service=" . base64_encode($servUrl);
     } else
-        $serviceUrl = get_current_request_url();
+        $serviceUrl = remove_single_get_param(get_current_request_url(), "ticket");
     $validationUrl = get_env("cas_validate") . "?ticket=$casToken&service=$serviceUrl&format=json";
     $ch = curl_init($validationUrl);
 
@@ -52,7 +52,7 @@ function validate_cas_token(string $casToken, string $token): mixed
     curl_close($ch);
     $res = json_decode($resStr, true);
     if (array_key_exists("authenticationFailure", $res["serviceResponse"])) {
-        throw_error(Errors::INVALID_TOKEN);
+        throw_error(Errors::INVALID_TOKEN, ["debug" => $res]);
     }
     return $res;
 }

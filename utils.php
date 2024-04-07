@@ -67,6 +67,14 @@ function array_has_all_keys(array $array, ...$keys): bool
     die_with_http_code_json(400, array_merge(["success" => false, "error" => $error], $additionalArgs));
 }
 
+function remove_single_get_param($url, $varname): string {
+    list($urlpart, $qspart) = array_pad(explode('?', $url), 2, '');
+    parse_str($qspart, $qsvars);
+    unset($qsvars[$varname]);
+    $newqs = http_build_query($qsvars);
+    return $urlpart . '?' . $newqs;
+}
+
 function get_protocol(): string
 {
 	return ($_SERVER["HTTPS"] ? "https://" : "http://");
@@ -74,7 +82,7 @@ function get_protocol(): string
 
 function get_current_request_url(): string
 {
-	return urlencode(get_protocol() . $_SERVER["HTTP_HOST"] . $_SERVER["REQUEST_URI"]);
+    return get_protocol() . $_SERVER["HTTP_HOST"] . $_SERVER["REQUEST_URI"];
 }
 
 function datetime_from_timestamp(int $timestamp): DateTime{

@@ -1,4 +1,6 @@
 <?php
+require_once 'utils.php';
+echo get_current_request_url();
 //require_once 'CasLoginPDO.php';
 //require_once 'Requests.php';
 //require_once 'LoggedUser.php';
