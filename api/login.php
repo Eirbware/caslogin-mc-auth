@@ -20,18 +20,20 @@ if (!array_key_exists("token", $_GET)) {
 }
 
 if (!array_key_exists('ticket', $_GET)) {
-    redirect_cas();
+    ?>
+    <div style="display: flex; flex-direction: column; align-items: center">
+        <h1 style="font-size: xxx-large">Are you sure you want to log in to the minecraft server?</h1>
+        <div style="margin-top: 10em; display: flex; justify-content: space-between; width: 30%;">
+            <a href="<?= get_env("cas_auth") . "?service=" . get_current_request_url(); ?>" style="font-size: xxx-large;">Yes</a>
+            <a href="https://haveibeenpwned.com" style="font-size: xxx-large">No</a>
+        </div>
+    </div>
+
+    <?php
 } else {
     require_once '../bootstrap.php';
     global $entityManager;
     login_success($entityManager, $_GET["ticket"], $_GET["token"]);
-}
-
-function redirect_cas(): void
-{
-    http_response_code(302);
-    $casUrl = get_env("cas_auth") . "?service=" . get_current_request_url();
-    header("Location: " . $casUrl);
 }
 
 function validate_cas_token(string $casToken, string $token): mixed
