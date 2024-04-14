@@ -1,12 +1,12 @@
 <?php
 
 use Doctrine\ORM\EntityManager;
-use Doctrine\ORM\Exception\ORMException;
+use private\Errors;
 
-require_once '../auth_endpoint.php';
-require_once '../env.php';
-require_once '../utils.php';
-require_once '../Errors.php';
+require_once '../../private/auth_endpoint.php';
+require_once '../../private/env.php';
+require_once '../../private/utils.php';
+require_once '../../private/Errors.php';
 
 if ($_SERVER["REQUEST_METHOD"] != "POST") {
     die_with_http_code(405, "<h1>Method not allowed</h1>");
@@ -19,7 +19,7 @@ if (!array_key_exists("uuid", $_POST)) {
     throw_error(Errors::NOT_ENOUGH_KEYS);
 }
 
-require_once '../bootstrap.php';
+require_once '../../private/bootstrap.php';
 global $entityManager;
 $csrfRepo = $entityManager->getRepository(CSRFToken::class);
 $oldCsrf = $csrfRepo->findOneBy(["uuid" => $_POST["uuid"]]);

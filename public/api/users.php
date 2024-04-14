@@ -2,11 +2,11 @@
 
 use Doctrine\ORM\EntityRepository;
 
-require_once '../auth_endpoint.php';
-require_once '../utils.php';
+require_once '../../private/auth_endpoint.php';
+require_once '../../private/utils.php';
 if ($_SERVER['REQUEST_METHOD'] != "GET")
     die_with_http_code(405, "<h1>Method not allowed</h1>");
-require_once '../bootstrap.php';
+require_once '../../private/bootstrap.php';
 global $entityManager;
 $loggedUserRep = $entityManager->getRepository(LoggedUser::class);
 function get_user_with_uuid(string $uuid, EntityRepository $loggedUserRep)

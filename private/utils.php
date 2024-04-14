@@ -2,6 +2,7 @@
 
 //https://stackoverflow.com/a/40582472
 use JetBrains\PhpStorm\NoReturn;
+use Errors;
 
 /**
  * Get header Authorization

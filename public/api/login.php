@@ -3,10 +3,11 @@
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\EntityManager;
 use JetBrains\PhpStorm\NoReturn;
+use private\Errors;
 
-require_once '../env.php';
-require_once '../utils.php';
-require_once '../Errors.php';
+require_once '../../private/env.php';
+require_once '../../private/utils.php';
+require_once '../../private/Errors.php';
 if ($_SERVER['REQUEST_METHOD'] != "GET") {
     http_response_code(405);
     echo '<h1>Method not allowed</h1>';
@@ -31,7 +32,7 @@ if (!array_key_exists('ticket', $_GET)) {
 
     <?php
 } else {
-    require_once '../bootstrap.php';
+    require_once '../../private/bootstrap.php';
     global $entityManager;
     login_success($entityManager, $_GET["ticket"], $_GET["token"]);
 }

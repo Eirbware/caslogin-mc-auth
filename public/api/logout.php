@@ -3,10 +3,11 @@
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityRepository;
 use JetBrains\PhpStorm\NoReturn;
+use private\Errors;
 
-require_once '../auth_endpoint.php';
-require_once '../utils.php';
-require_once '../Errors.php';
+require_once '../../private/auth_endpoint.php';
+require_once '../../private/utils.php';
+require_once '../../private/Errors.php';
 
 #[NoReturn] function handle_logout(EntityManager $entityManager, string $user): void
 {
@@ -42,7 +43,7 @@ $_POST = json_decode($json, true);
 if (!array_key_exists("user", $_POST))
 	throw_error(Errors::NOT_ENOUGH_KEYS);
 
-require_once '../bootstrap.php';
+require_once '../../private/bootstrap.php';
 global $entityManager;
 
 handle_logout($entityManager, $_POST["user"]);

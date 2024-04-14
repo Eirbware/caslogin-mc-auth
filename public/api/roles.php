@@ -2,10 +2,11 @@
 
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityRepository;
+use private\Errors;
 
-require_once '../auth_endpoint.php';
-require_once '../utils.php';
-require_once '../Errors.php';
+require_once '../../private/auth_endpoint.php';
+require_once '../../private/utils.php';
+require_once '../../private/Errors.php';
 
 function handle_add_roles(EntityManager $entityManager, CasUser $user, Role $role): void
 {
@@ -45,7 +46,7 @@ $_POST = json_decode($json, true);
 if (!array_has_all_keys($_POST, "user", "role"))
 	throw_error(Errors::NOT_ENOUGH_KEYS);
 
-require_once '../bootstrap.php';
+require_once '../../private/bootstrap.php';
 global $entityManager;
 $user = get_user_or_die($entityManager->getRepository(CasUser::class));
 $role = get_role_or_die($entityManager->getRepository(Role::class));

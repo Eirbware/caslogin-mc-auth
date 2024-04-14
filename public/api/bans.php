@@ -4,11 +4,12 @@ use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityRepository;
 use JetBrains\PhpStorm\NoReturn;
+use private\Errors;
 use repositories\BanRepository;
 
-require_once '../auth_endpoint.php';
-require_once '../utils.php';
-require_once '../Errors.php';
+require_once '../../private/auth_endpoint.php';
+require_once '../../private/utils.php';
+require_once '../../private/Errors.php';
 require_once '../src/Ban.php';
 
 
@@ -109,7 +110,7 @@ header("Accept: application/json");
 
 if ($_SERVER['REQUEST_METHOD'] != "POST" && $_SERVER['REQUEST_METHOD'] != "GET")
     die_with_http_code(405, "<h1>Bad Method</h1>");
-require_once '../bootstrap.php';
+require_once '../../private/bootstrap.php';
 global $entityManager;
 if ($_SERVER['REQUEST_METHOD'] == "POST") {
     handle_ban_user($entityManager);
