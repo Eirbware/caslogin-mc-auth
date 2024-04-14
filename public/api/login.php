@@ -3,7 +3,7 @@
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\EntityManager;
 use JetBrains\PhpStorm\NoReturn;
-use private\Errors;
+use Errors;
 
 require_once '../../private/env.php';
 require_once '../../private/utils.php';
@@ -21,17 +21,29 @@ if (!array_key_exists("token", $_GET)) {
 }
 
 if (!array_key_exists('ticket', $_GET)) {
+    $MD5_LEN = 32;
+    $tokenLength = 10;
+    $csrf = substr(md5(microtime()), rand(0, $MD5_LEN - $tokenLength - 1), $tokenLength);
+    session_start();
+    $_SESSION["csrf"] = $csrf;
     ?>
     <div style="display: flex; flex-direction: column; align-items: center">
         <h1 style="font-size: xxx-large">Are you sure you want to log in to the minecraft server?</h1>
         <div style="margin-top: 10em; display: flex; justify-content: space-between; width: 30%;">
-            <a href="<?= get_env("cas_auth") . "?service=" . get_current_request_url(); ?>" style="font-size: xxx-large;">Yes</a>
+            <a href="<?= get_env("cas_auth") . "?service=" . rawurlencode(get_current_request_url() . "&csrf=" . $csrf); ?>"
+               style="font-size: xxx-large;">Yes</a>
             <a href="https://haveibeenpwned.com" style="font-size: xxx-large">No</a>
         </div>
     </div>
 
     <?php
 } else {
+    session_start();
+    if (!isset($_GET["csrf"])
+        || !isset($_SESSION["csrf"])
+        || strcmp($_GET["csrf"], $_SESSION["csrf"]) != 0){
+        die_with_http_code(403, "<h1>Someone tried to hack you.</h1>");
+    }
     require_once '../../private/bootstrap.php';
     global $entityManager;
     login_success($entityManager, $_GET["ticket"], $_GET["token"]);

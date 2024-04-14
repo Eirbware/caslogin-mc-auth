@@ -3,7 +3,7 @@
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityRepository;
 use JetBrains\PhpStorm\NoReturn;
-use private\Errors;
+use Errors;
 use repositories\BanRepository;
 
 require_once '../../private/auth_endpoint.php';

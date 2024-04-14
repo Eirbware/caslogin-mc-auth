@@ -1,7 +1,7 @@
 <?php
 
 use Doctrine\ORM\EntityManager;
-use private\Errors;
+use Errors;
 
 require_once '../../private/auth_endpoint.php';
 require_once '../../private/env.php';
