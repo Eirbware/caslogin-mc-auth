@@ -30,7 +30,7 @@ if (!array_key_exists('ticket', $_GET)) {
     <div style="display: flex; flex-direction: column; align-items: center">
         <h1 style="font-size: xxx-large">Are you sure you want to log in to the minecraft server?</h1>
         <div style="margin-top: 10em; display: flex; justify-content: space-between; width: 30%;">
-            <a href="<?= get_env("cas_auth") . "?service=" . rawurlencode(get_current_request_url() . "&csrf=" . $csrf); ?>"
+            <a href="<?= get_env("cas_auth") . "?service=" . rawurlencode(get_current_request_url() . "&csrf=" . $_SESSION["csrf"]); ?>"
                style="font-size: xxx-large;">Yes</a>
             <a href="https://haveibeenpwned.com" style="font-size: xxx-large">No</a>
         </div>
@@ -53,10 +53,10 @@ function validate_cas_token(string $casToken, string $token): mixed
 {
     // Dirty but needed to not change code between prod and dev lol...)
     if (!str_contains(get_env("cas_auth"), "cas.bordeaux-inp.fr")) {
-        $servUrl = rawurlencode(remove_single_get_param(get_current_request_url(), "ticket"));
+        $servUrl = rawurlencode(remove_single_get_param(get_current_request_url() . "&csrf=" . $_GET["csrf"], "ticket"));
         $serviceUrl = get_env("cas_auth") . "?service=" . base64_encode($servUrl);
     } else
-        $serviceUrl = remove_single_get_param(get_current_request_url(), "ticket");
+        $serviceUrl = rawurlencode(remove_single_get_param(get_current_request_url() . "&csrf=" . $_GET["csrf"], "ticket"));
     $validationUrl = get_env("cas_validate") . "?ticket=$casToken&service=$serviceUrl&format=json";
     $ch = curl_init($validationUrl);
 
